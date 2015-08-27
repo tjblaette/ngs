@@ -1,0 +1,22 @@
+//file containing Bpipe call for AMPLICON pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_amplicon_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+        "*.fastq" *  [ cutadapt ] +
+        "%.fastq" * [ trim ] +
+        "%_R*.fastq" * [ amplicon ] +
+        "%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] +
+        "%.pass.%" * [ doublePos ] +
+        "%.pass.%.rwrt" * [  tableANNOVAR ] +
+        "%_R*.fastq" * [ mergedAmplicon ] +
+        "%R1%merged.csv" * [ final_sed + filterOutput ]
+}
+

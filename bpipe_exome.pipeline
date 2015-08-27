@@ -1,0 +1,19 @@
+//file containing Bpipe call for WES pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_exome_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSC + 
+	"*somVARSC.%" * [ sed_rfmt + processVARSC ] + 
+	"*%.pass.%" * [ doublePos ] + 
+	"*%.pass.%.rwrt" * [  tableANNOVAR ]  + merged + 
+	"*R1%merged.csv" * [ final_sed + filterOutput ] 
+}
+

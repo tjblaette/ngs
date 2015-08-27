@@ -1,0 +1,18 @@
+//file containing Bpipe call for MOUSE pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_mouse_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+        "%_R*.fastq" * [ runEXOME_VARSCAN_mouse ] + 
+        somVARSC + "*somVARSC.%" * [ sed_rfmt + processVARSC ] + "*%.pass.%" * [ doublePos ] + 
+        "*%.pass.%.rwrt" * [  tableANNOVARmm10 ]  + 
+        merged + "*R1%merged.csv" * [ final_sed + filterOutput ] 
+}
+
