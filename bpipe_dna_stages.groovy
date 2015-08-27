@@ -210,7 +210,7 @@ baseRecalGATK = {
 
 
 mpileupSAM = {
-    exec "$SAMTOOLS mpileup -f $REF $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 $input.bam > $output.pileup"
 }
 
 
