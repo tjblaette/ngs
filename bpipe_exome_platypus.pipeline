@@ -1,0 +1,17 @@
+//file containing Bpipe call for WES pipeline using PLATYPUS instead of VARSCAN
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_exome_config.groovy'
+
+Bpipe.run {
+//     	"%_R*.fastq" * [ runEXOME_PLATYPUS ] +
+	"%.bam" * [ unpairedPLATYPUS ] +
+        "*PLATYPUS.vcf" * [ processBED ] +
+        "%ct.vcf" * [ conv2ANNO ] +
+        "%avinput" * [ tableANNOVAR ] 
+}
+

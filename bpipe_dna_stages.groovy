@@ -261,7 +261,7 @@ conv2ANNO = {
 }
 
 
-PLATYPUS = {
+unpairedPLATYPUS = {
     var nkern : 24
     output.dir="intermediate_files"
     exec "$PLATYPUS callVariants --refFile=$REF --bamFiles=$input.bam --assemble=1 --assembleBrokenPairs=1 --nCPU=$nkern --output=$output.vcf"
@@ -316,7 +316,7 @@ runEXOME_PLATYPUS = segment {
         processPICARD +
 	realignGATK +
         coverBED +
-        PLATYPUS
+        unpairedPLATYPUS
 }
 
 
