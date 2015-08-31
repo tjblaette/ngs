@@ -136,7 +136,7 @@ dedupPIC = {
 coverBED = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
-    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -d > ${output.txt.prefix}_exon.txt"
+    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -d -sorted -g ${REF}.genomeFile > ${output.txt.prefix}_exon.txt"
     exec "${NGS}/calc_cvg/calc_cvg ${output.txt.prefix}_exon.txt $input1.fastq $input2.fastq > $output.txt"
     exec "rm ${output.txt.prefix}_exon.txt" //irgendwie loescht er das nicht?? 
     forward input.bam
