@@ -69,5 +69,6 @@ echo "$(( $(wc -l ${2}_candidates.csv | cut -f1 -d' ') -1)) calls in ${2}_filter
 rm -f intermediate_files/*.sam
 rm -f intermediate_files/*somVARSC.*
 rm -f intermediate_files/*.coverBED_exon.txt
+rm -f intermediate_files/*dedupPIC.ba*
 rm -f intermediate_files/*otherinfo*
 rm -rf tmp/
