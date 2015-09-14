@@ -32,7 +32,7 @@ width=$( head -2 $ref | wc -L )
 #parse non-number-chromosomes (and make sure all others are matched correctly too!)
 if [ ! -e ${ref}_chromosomes.txt ]
 then
-	grep '>' $ref | nl > ${ref}_chromosomes.txt
+	cut -f1 ${ref}.fai | nl > ${ref}_chromosomes.txt
 fi
 
 chr=$(grep -w $chr ${ref}_chromosomes.txt | cut -f1)
@@ -44,6 +44,8 @@ final_chr=$(echo $(tail -n 1 ${ref}_chromosomes.txt | cut -f1) | sed 's/>chr\(.*
 if [ ! -e ${ref}_linesPerChr.txt ]
 then
 	grep -n '>chr' $ref | cut -f1 -d':' > ${ref}_linesPerChr.txt
+	# also append total line number of REF to check later and prevent recalculation
+	wc -l $ref | cut -f1 -d' ' >> ${ref}_linesPerChr.txt
 fi
 
 #get the region to be printed out
@@ -69,12 +71,13 @@ end=$(( $start + $length ))
 
 
 #test if there are enough bases in this row to output full flanking sequences
-currentWidth=$( sed $line'q;d' $ref | wc -L )
+currentLine=$( sed $line'q;d' $ref )
+currentWidth=$( echo $currentLine | wc -L )
 if [ $end -gt $currentWidth ]
 then
 #echo 'too long'
 
-    if [ $line -lt $(wc -l $ref | cut -f1 -d' ') -a $chr = $final_chr -o $chr != $final_chr -a $line -lt $(( $(sed $(( $chr + 1 ))'q;d' ${ref}_linesPerChr.txt) -1 )) ]
+    if [ $line -lt $(tail -n 1 ${ref}_linesPerChr.txt) -a $chr = $final_chr -o $chr != $final_chr -a $line -lt $(( $(sed $(( $chr + 1 ))'q;d' ${ref}_linesPerChr.txt) -1 )) ]
     then
 #echo 'have a second line'
 	line2=$(( $line + 1 ))
@@ -82,20 +85,20 @@ then
 	end2=$(( ( $width - $end ) * (-1)))
 	end1=$width
 #kann ich hier garantieren, dass die nächste Zeile immer reicht??
-	sed $line'q;d' $ref | sed "s/^\(.\{${start}\}\)\(.*\)/\2/g" > ${1}_sed_tmp.txt
-	sed $line2'q;d' $ref | sed "s/^\(.\{${end2}\}\).*/\1/g" >> ${1}_sed_tmp.txt
+	echo $currentLine | sed "s/^\(.\{${start}\}\)\(.*\)/\2/g" > ${1}_${2}_sed_tmp.txt
+	sed $line2'q;d' $ref | sed "s/^\(.\{${end2}\}\).*/\1/g" >> ${1}_${2}_sed_tmp.txt
 	
-	tr -d '\n' < ${1}_sed_tmp.txt | cat
-	rm -f ${1}_sed_tmp.txt
+	tr -d '\n' < ${1}_${2}_sed_tmp.txt | cat
+	rm -f ${1}_${2}_sed_tmp.txt
 	echo ''
     else
 #echo 'no second line'
-        sed $line'q;d' $ref | sed "s/^\(.\{${start}\}\)\(.*\).*/\2/g"
+        echo $currentLine | sed "s/^\(.\{${start}\}\)\(.*\).*/\2/g"
     fi
 else
 #echo 'all good'
 	#print
-	sed $line'q;d' $ref | sed "s/^\(.\{${start}\}\)\(.\{${length}\}\).*/\2/g"
+	echo $currentLine | sed "s/^\(.\{${start}\}\)\(.\{${length}\}\).*/\2/g"
 fi
 
 }
@@ -113,5 +116,5 @@ do
                 echo "${line},$(get_flanking $chrom $left $2 $3),$(get_flanking $chrom $right $2 $3)" >> ${1}_tmp
 done
 
-mv ${1}_tmp $1
+mv ${1}_tmp ${1}_edited
 
