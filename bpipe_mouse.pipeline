@@ -10,6 +10,7 @@ load 'bpipe_mouse_config.groovy'
 
 Bpipe.run {
 	getVersions + 
+	"%_R*.fastq" * [ qc ] +
         "%_R*.fastq" * [ runEXOME_VARSCAN_mouse ] + 
         somVARSC + "*somVARSC.%" * [ sed_rfmt + processVARSC ] + "*%.pass.%" * [ doublePos ] + 
         "*%.pass.%.rwrt.fixed" * [  tableANNOVARmm10 ]  + 
