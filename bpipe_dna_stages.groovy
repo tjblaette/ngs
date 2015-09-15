@@ -459,7 +459,7 @@ finalSedPINDEL = {
 
 
 filterOutput = {
-      var candidates : "${NGS}/candidate_genes_aml.txt"
+      var candidates : CANDIDATES
       exec "echo \$(date) running $FILTER"
       exec "$FILTER $input.csv $input.csv.prefix $candidates $REF 15"
 }

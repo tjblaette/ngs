@@ -6,6 +6,7 @@ FILTER="filter_amplicon_wFlankingSeq.sh"
 
 // KNOWN SEQUENCES
 REF="${NGS}/refgenome/GATK/ucsc.hg19.fasta" //also includes unplaced/unlocalized contigs and alternative haplotypes
+CANDIDATES="${NGS}/known_sites/candidate_genes_aml.txt"
 DBSNP="${NGS}/known_sites/hg19/dbsnp_138.hg19.vcf"
 GOLD_STANDARD_1000G_INDELS="${NGS}/known_sites/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf"
 PHASE1_1000G_INDELS="${NGS}/known_sites/hg19/1000G_phase1.indels.hg19.sites.vcf"
