@@ -108,13 +108,13 @@ sed -i 's/?$/,left_flanking_seq,right_flanking_seq/' ${1}_tmp
 
 tail -n +2 $1 | while read line
 do
-                chrom=$(echo $line | cut -f1 -d',') 
-                indel_length=$(echo $line | cut -f5 -d',' | grep '-' | sed 's/^-\([ATCG]*\)/\1/' | wc -L)
-		indel_begin=$(echo $line | cut -f2 -d',' )
+                chrom=$(echo $line | sed 's/"//g' | cut -f1 -d',') 
+                indel_length=$(echo $line | sed 's/"//g' | cut -f5 -d',' | grep '-' | sed 's/^-\([ATCG]*\)/\1/' | wc -L)
+		indel_begin=$(echo $line | sed 's/"//g' | cut -f2 -d',' )
                 left=$(( $indel_begin - $3 )) 
                 right=$(( $indel_begin +  $indel_length )) 
-                echo "${line},$(get_flanking $chrom $left $2 $3),$(get_flanking $chrom $right $2 $3)" >> ${1}_tmp
+                echo "${line},\"$(get_flanking $chrom $left $2 $3)\",\"$(get_flanking $chrom $right $2 $3)\"" >> ${1}_tmp
 done
 
-mv ${1}_tmp ${1}_edited
+mv ${1}_tmp ${1}
 
