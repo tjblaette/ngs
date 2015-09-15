@@ -12,7 +12,7 @@ Bpipe.run {
 	getVersions + 
         "%_R*.fastq" * [ runEXOME_VARSCAN_mouse ] + 
         somVARSC + "*somVARSC.%" * [ sed_rfmt + processVARSC ] + "*%.pass.%" * [ doublePos ] + 
-        "*%.pass.%.rwrt" * [  tableANNOVARmm10 ]  + 
-        merged + "*R1%merged.csv" * [ final_sed_mm10 + filterOutput ] 
+        "*%.pass.%.rwrt.fixed" * [  tableANNOVARmm10 ]  + 
+        merged + "*R1%merged.csv" * [ final_sed + filterOutput ] 
 }
 

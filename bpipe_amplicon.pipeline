@@ -15,7 +15,7 @@ Bpipe.run {
         "%_R*.fastq" * [ amplicon ] +
         "%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] +
         "%.pass.%" * [ doublePos ] +
-        "%.pass.%.rwrt" * [  tableANNOVAR ] +
+        "*%.pass.%.rwrt.fixed" * [  tableANNOVAR ] +
         "%_R*.fastq" * [ mergedAmplicon ] +
         "%R1%merged.csv" * [ final_sed + filterOutput ]
 }

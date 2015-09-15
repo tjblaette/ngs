@@ -10,6 +10,7 @@ BEDTOOLS="/NGS/links/bedtools"
 BWA="bwa"
 CUTADAPT="cutadapt"
 GATK="gatk"
+QC="ngsqc"
 PICARD="picard"
 PINDEL="/NGS/links/pindel"
 PLATYPUS="platypus"
@@ -18,6 +19,11 @@ VARSCAN="varscan"
 
 getVersions = {
     exec "ls -l ${NGS}/links"
+}
+
+qc = {
+    var nkern : 24
+    exec "$QC -pe $input1.fastq $input2.fastq 2 A -c $nkern -onlyStat -o FASTQ_QC"
 }
 
 trim = { 
@@ -209,8 +215,15 @@ baseRecalGATK = {
 }
 
 
-mpileupSAM = {
-    exec "$SAMTOOLS mpileup -f $REF -q 1 $input.bam > $output.pileup"
+mpileupSAMpad = {
+    var exon_cover : EXON_TARGET
+    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -B -l ${exon_cover}_padded $input.bam > $output.pileup"""
+}
+
+//additional stage to use non-padded BED for Amplicons
+mpileupSAMexact = {
+    var exon_cover : EXON_TARGET
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -l $exon_cover $input.bam > $output.pileup"
 }
 
 
@@ -286,7 +299,7 @@ runEXOME_VARSCAN = segment {
 	processPICARD + 
 	realignGATK +
         coverBED +
-        mpileupSAM
+        mpileupSAMpad
 }
 
 
@@ -296,7 +309,7 @@ runEXOME_VARSCAN_mouse = segment {
         processPICARD +
         realignGATKwoutKnown +
         coverBED +
-        mpileupSAM
+        mpileupSAMpad
 }
 
 
@@ -365,7 +378,7 @@ amplicon = segment {
         indexPIC + idxstatPIC +
         realignGATK + 
         coverBED +
-        mpileupSAM +
+        mpileupSAMexact +
         somVARSCunpaired
 }
 
@@ -385,8 +398,8 @@ processVARSC = {
 doublePos = {
     exec "sed -e '0,/chr.*\$/{s/chr.*\$/&\\n&/}' $input > intermediate_files/\$(basename ${input}.pre_rwrt)"
     exec "${NGS}/snp_rwrt/snp_rwrt intermediate_files/\$(basename ${input}.pre_rwrt) intermediate_files/\$(basename ${input}.rwrt)"
-    exec "sed -i -e '1d' intermediate_files/\$(basename ${input}.rwrt)"
-    forward """${input}.rwrt"""
+    exec """awk -v OFS="\t" 'substr(\$5,1,1) == "-" {\$2=\$2+1; \$3=\$3+length(\$5)-1; \$4=substr(\$5,2,length(\$5)); \$5="-"; print \$0} substr(\$5,1,1) != "-" {print \$0}' intermediate_files/\$(basename ${input}.rwrt)  > intermediate_files/\$(basename ${input}.rwrt.fixed)"""
+    forward """${input}.rwrt.fixed"""
 }
 
 
@@ -431,16 +444,6 @@ final_sed = {
     exec """cut -f13- -d',' intermediate_files/\$(basename ${input}_not_otherinfo2.txt) | sed -e 's/^"//g' > intermediate_files/\$(basename ${input}_otherinfo.txt)"""
     exec "paste intermediate_files/\$(basename ${input}_not_otherinfo1.txt) intermediate_files/\$(basename ${input}_not_otherinfo3.txt) intermediate_files/\$(basename ${input}_otherinfo.txt) > $input"
     exec """sed  -i -e 's/	/,/g' -e 's/,"\$//g' -e 's/Otherinfo/Otherinfo=(normal_reads1,normal_reads2,normal_var_freq,normal_gt,tumor_reads1,tumor_reads2,tumor_var_freq,tumor_gt,somatic_status,variant_p_value,somatic_p_value,tumor_reads1_plus,tumor_reads1_minus,tumor_reads2_plus,tumor_reads2_minus,normal_reads1_plus,normal_reads1_minus,normal_reads2_plus,normal_reads2_minus)?/' $input"""
-}
-
-final_sed_mm10 = {
-    exec "cut -f1-5 -d',' $input > intermediate_files/\$(basename ${input}_not_otherinfo1.txt)"
-    exec """cut -f6- -d',' $input | sed -e '2,\$ s/","/"___re___"/g' -e 's/""/"/g' -e '2,\$ s/,/;/g' -e 's/___re___/,/g'  > intermediate_files/\$(basename ${input}_not_otherinfo2.txt)"""
-    exec "cut -f1-7 -d',' intermediate_files/\$(basename ${input}_not_otherinfo2.txt) > intermediate_files/\$(basename ${input}_not_otherinfo3.txt)"
-    exec """cut -f8- -d',' intermediate_files/\$(basename ${input}_not_otherinfo2.txt) | sed -e 's/^"//g' > intermediate_files/\$(basename ${input}_otherinfo.txt)"""
-    exec "paste intermediate_files/\$(basename ${input}_not_otherinfo1.txt) intermediate_files/\$(basename ${input}_not_otherinfo3.txt) intermediate_files/\$(basename ${input}_otherinfo.txt) > $input"
-    exec """sed  -i -e 's/      /,/g' -e 's/,"\$//g' -e 's/Otherinfo/Otherinfo=(normal_reads1,normal_reads2,normal_var_freq,normal_gt,tumor_reads1,tumor_reads2,tumor_var_freq,tumor_gt,somatic_status,va
-riant_p_value,somatic_p_value,tumor_reads1_plus,tumor_reads1_minus,tumor_reads2_plus,tumor_reads2_minus,normal_reads1_plus,normal_reads1_minus,normal_reads2_plus,normal_reads2_minus)?/' $input"""
 }
 
 
