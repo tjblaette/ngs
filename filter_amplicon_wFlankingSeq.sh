@@ -72,3 +72,4 @@ rm -f intermediate_files/*.coverBED_exon.txt
 rm -f intermediate_files/*dedupPIC.ba*
 rm -f intermediate_files/*otherinfo*
 rm -rf tmp/
+rm -rf JAVA_TMP/
