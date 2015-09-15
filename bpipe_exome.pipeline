@@ -10,6 +10,7 @@ load 'bpipe_exome_config.groovy'
 
 Bpipe.run {
 	getVersions + 
+	"%_R*.fastq" * [ qc ] +
 	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSC + 
 	"*somVARSC.%" * [ sed_rfmt + processVARSC ] + 
 	"*%.pass.%" * [ doublePos ] + 
