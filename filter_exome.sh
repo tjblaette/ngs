@@ -35,52 +35,47 @@ lines="$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out reads with tumor_reads2 < 4
-#sed '/^\([^,]*,\)\{23\}[0-3],/d' ${2}_filtered_somatic.csv > tumorreads2min4
-sed -i -e '/^\([^,]*,\)\{22\}[0-3],/d' ${2}_filtered_somatic.csv 
+sed -i -e '/^\([^,]*,\)\{22\}"[0-3]",/d' ${2}_filtered_somatic.csv 
 echo $(($lines - $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2 < 4 and were dropped" >> ${2}_filter_statistic.txt
 lines=$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out calls that have an entry for GenomicSuperDups-DB
-#sed '/^\([^,]*,\)\{10\}"\."/d' tumorreads2min4 > noSuperDups
-sed -i -e '/^\([^,]*,\)\{10\}"[^\.]/d' ${2}_filtered_somatic.csv
+sed -i -e '2,$ {/^\([^,]*,\)\{10\}"[^\.]/d}' ${2}_filtered_somatic.csv
 echo $(($lines - $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had an entry for GenomicSuperDups-DB and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out calls that have an entry for dbsnp and not for cosmic
-#sed '/^\([^,]*,\)\{14\}"[^\(\.\)"][^,]*,"\."/d' noSuperDups > nodbsnpbutcosmic
 sed -i -e '/^\([^,]*,\)\{13\}"[^\(\.\)"][^,]*,"\."/d' ${2}_filtered_somatic.csv
 echo $(($lines - $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had an entry for SNP-DB but not for cosmic-DB and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out snps with 0 tumor_reads2_plus and 0 tumor_reads2_minus
-#sed '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{26\}0/d' nodbsnpbutcosmic > noplus0
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{25\}0/d' ${2}_filtered_somatic.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{25\}"0"/d' ${2}_filtered_somatic.csv
 echo $(($lines - $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_plus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
-#sed '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{27\}0/d' noplus0 > noplusminus0
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{26\}0/d' ${2}_filtered_somatic.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{26\}"0"/d' ${2}_filtered_somatic.csv
 echo $(($lines - $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_minus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering and are saved to ${2}_filtered_somatic.csv" >> ${2}_filter_statistic.txt
 
 #split files according to normal_var_freq
 head -n 1 $1 > ${2}_filtered_somatic_true.csv
-sed -n '/^\([^,]*,\)\{19\}[0-7],/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_true.csv
+sed -n '/^\([^,]*,\)\{19\}"[0-7]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_true.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_true.csv | cut -f1 -d' ') -1)) of these calls have normal_variant_frequency < 8 and were saved to ${2}_filtered_somatic_true.csv" >> ${2}_filter_statistic.txt
 
 head -n 1 $1 > ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{19\}[8-9],/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{19\}[1-2][0-9],/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"[8-9]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"[1-2][0-9]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ') -1)) of these calls have 7 < normal_variant_frequency < 30 and were saved to ${2}_filtered_somatic_check.csv" >> ${2}_filter_statistic.txt
 
 head -n 1 $1 > ${2}_filtered_somatic_normalVarFreq30plus.csv
-sed -n '/^\([^,]*,\)\{19\}[3-9][0-9]/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
-sed -n '/^\([^,]*,\)\{19\}100/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
+sed -n '/^\([^,]*,\)\{19\}"[3-9][0-9]"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
+sed -n '/^\([^,]*,\)\{19\}"100"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_normalVarFreq30plus.csv | cut -f1 -d' ') -1)) of these calls have normal_variant_frequency > 29 and were saved to ${2}_filtered_somatic_normalVarFreq30plus.csv" >> ${2}_filter_statistic.txt
 
 
@@ -98,13 +93,13 @@ lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out reads with tumor_reads2 < 4
-sed -i -e '/^\([^,]*,\)\{22\}[0-3],/d' ${2}_filtered_germline.csv
+sed -i -e '/^\([^,]*,\)\{22\}"[0-3]",/d' ${2}_filtered_germline.csv
 echo $(($lines - $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2 < 4 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out calls that have an entry for GenomicSuperDups-DB
-sed -i -e '/^\([^,]*,\)\{10\}"[^\.]/d' ${2}_filtered_germline.csv
+sed -i -e '2,$ {/^\([^,]*,\)\{10\}"[^\.]/d}' ${2}_filtered_germline.csv
 echo $(($lines - $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') +1)) " of these calls had an entry for GenomicSuperDups-DB and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
@@ -116,22 +111,22 @@ lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out snps with 0 tumor_reads2_plus and 0 tumor_reads2_minus
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{25\}0/d' ${2}_filtered_germline.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{25\}"0"/d' ${2}_filtered_germline.csv
 echo $(($lines - $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_plus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{26\}0/d' ${2}_filtered_germline.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{26\}"0"/d' ${2}_filtered_germline.csv
 echo $(($lines - $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_minus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_germline.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering and are saved to ${2}_filtered_germline.csv" >> ${2}_filter_statistic.txt
 
 #add filtered germline calls with normal_variant_frequency <= 30 to _filtered_somatic_check.csv
 prev="$(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ')"
-sed -n '/^\([^,]*,\)\{19\}[0-9],/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{19\}2/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{19\}30,/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{19\}1[0-9],/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"[0-9]",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"2/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"30",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{19\}"1[0-9]",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ') - $prev)) filtered germline calls had a normal_variant_frequency up to 30% and were also added to ${2}_filtered_somatic_check.csv" >> ${2}_filter_statistic.txt
 
 
@@ -146,13 +141,13 @@ lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out reads with tumor_reads2 < 4
-sed -i -e '/^\([^,]*,\)\{22\}[0-3],/d' ${2}_filtered_LOH.csv
+sed -i -e '/^\([^,]*,\)\{22\}"[0-3]",/d' ${2}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2 < 4 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out calls that have an entry for GenomicSuperDups-DB
-sed -i -e '/^\([^,]*,\)\{10\}"[^\.]/d' ${2}_filtered_LOH.csv
+sed -i -e '2,$ {/^\([^,]*,\)\{10\}"[^\.]/d}' ${2}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had an entry for GenomicSuperDups-DB and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
@@ -164,12 +159,12 @@ lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
 #take out snps with 0 tumor_reads2_plus and 0 tumor_reads2_minus
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{25\}0/d' ${2}_filtered_LOH.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{25\}"0"/d' ${2}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_plus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
 echo "$lines calls remain after filtering" >> ${2}_filter_statistic.txt
 
-sed -i -e '/^\([^,]*,\)\{3\}[A-Z],[A-Z],\([^,]*,\)\{26\}0/d' ${2}_filtered_LOH.csv
+sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{26\}"0"/d' ${2}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_minus = 0 and were dropped" >> ${2}_filter_statistic.txt
 lines="$(( $(wc -l ${2}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
 echo "$lines calls remain after filtering and are saved to ${2}_filtered_LOH.csv" >> ${2}_filter_statistic.txt
@@ -195,8 +190,7 @@ rm -f *.pileup
 rm -f intermediate_files/*.sam
 rm -f intermediate_files/*somVARSC.*
 rm -f intermediate_files/*.alignMEM.sortPIC.ba*
-rm -f intermediate_files/*dedupPIC.ba*
 rm -f intermediate_files/*.coverBED_exon.txt
 rm -f intermediate_files/*otherinfo*
 rm -rf tmp/
-rm -rf JAVA_TMP
+rm -rf JAVA_TMP/
