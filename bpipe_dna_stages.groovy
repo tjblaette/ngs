@@ -351,6 +351,24 @@ somVARSC = {
     forward(glob("results_varscan/*.somVARSC.*"))
 }
 
+somVARSCvcf = {
+    output.dir="results_varscan"
+    exec """$VARSCAN somatic
+        $input1.pileup
+        $input2.pileup
+        results_varscan/${input2.prefix}_somVARSC
+        --output-snp results_varscan/${input2.prefix}.somVARSC.snp
+        --output-indel results_varscan/${input2.prefix}.somVARSC.indel
+        --min-coverage 1
+        --min-var-freq 0.01
+        --min-freq-for-hom 0.75
+        --normal-purity 1.0
+        --tumor-purity 1.0
+        --p-value 0.99
+        --somatic-p-value 0.05
+        --output-vcf 1"""
+    forward(glob("results_varscan/*.somVARSC.*"))
+}
 
 somVARSCunpaired = {
     output.dir="results_varscan"

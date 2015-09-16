@@ -1,0 +1,15 @@
+//file containing Bpipe call for WES pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_varsim_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSCvcf 
+}
+
