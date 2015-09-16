@@ -10,6 +10,7 @@ load 'bpipe_amplicon_config.groovy'
 
 Bpipe.run {
 	getVersions + 
+	"%_R*.fastq" * [ qc ] +
         "*.fastq" *  [ cutadapt ] +
         "%.fastq" * [ trim ] +
         "%_R*.fastq" * [ amplicon ] +
