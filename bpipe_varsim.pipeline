@@ -10,6 +10,9 @@ load 'bpipe_varsim_config.groovy'
 
 Bpipe.run {
 	getVersions + 
-	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSCvcf 
+//	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSCvcf 
+//	sortPIC + idxstatPIC 
+//        dedupPIC + idxstatPIC 
+	realignGATK
 }
 
