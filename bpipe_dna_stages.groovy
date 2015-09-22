@@ -223,7 +223,7 @@ mpileupSAMpad = {
 //additional stage to use non-padded BED for Amplicons
 mpileupSAMexact = {
     var exon_cover : EXON_TARGET
-    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -l $exon_cover $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -B -l $exon_cover $input.bam > $output.pileup"
 }
 
 
