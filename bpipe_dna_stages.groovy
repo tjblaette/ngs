@@ -188,7 +188,7 @@ realignGATKwoutKnown = {
 }
 
 
-baseRecalGATK = {
+bqsrGATK = {
     var nkern : 24
     output.dir="intermediate_files"
     exec """$GATK

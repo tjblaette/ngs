@@ -13,6 +13,7 @@ Bpipe.run {
 //	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSCvcf 
 //	sortPIC + idxstatPIC 
 //        dedupPIC + idxstatPIC 
-	realignGATK
+//	realignGATK
+	bqsrGATK
 }
 
