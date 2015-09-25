@@ -15,5 +15,6 @@ Bpipe.run {
 //        dedupPIC + idxstatPIC 
 //	realignGATK
 	bqsrGATK
+//	"%.bam" * [ mpileupSAM ] + somVARSCvcf
 }
 

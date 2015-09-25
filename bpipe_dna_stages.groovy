@@ -50,12 +50,15 @@ alignSAMPE = { //it is not recommended to use this stage -> use alignMEM instead
             $output1.sai 
             $output2.sai 
             $input1.fastq 
-            $input2.fastq > 
-            $output.sam"""
+            $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' > $output.sam """
 }
 
 
 alignMEM = {
+    //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
     var nkern : 24 
     output.dir="intermediate_files"
     exec """$BWA mem 
@@ -64,17 +67,10 @@ alignMEM = {
 	-R '@RG\tID:Sample\tSM:Sample\tPL:illumina\tCN:exome' 
         $REF
         $input1.fastq
-        $input2.fastq > $output.sam"""
-}
-
-
-sed = { 
-    //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
-    exec """sed -i -e '/^@PG/s/\t/ /5' 
-		-e '/^@PG/s/\t/ /5' 
-		-e '/^@PG/s/\t/ /5' 
-		-e '/^@PG/s/\t/ /5' 
-		$input.sam"""
+        $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
+                		-e '/^@PG/s/\t/ /5' 
+               			-e '/^@PG/s/\t/ /5' 
+                		-e '/^@PG/s/\t/ /5' > $output.sam """
 }
 
 
@@ -207,7 +203,7 @@ bqsrGATK = {
         --out $output.table"""
     exec """$GATK
         -T PrintReads
-        -R $ref
+        -R $REF
         -BQSR $output.table
         -l INFO
         -I $input.bam
@@ -226,6 +222,10 @@ mpileupSAMexact = {
     exec "$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -B -l $exon_cover $input.bam > $output.pileup"
 }
 
+//additional stage without BED and quality filters for VarSim
+mpileupSAM = {
+    exec "$SAMTOOLS mpileup -f $REF $input.bam > $output.pileup"
+}
 
 processSAM = segment {
 	sortSAM +
@@ -295,7 +295,6 @@ haplocGATK = {
 
 runEXOME_VARSCAN = segment {
 	alignMEM +
-        sed +
 	processPICARD + 
 	realignGATK +
         coverBED +
@@ -305,7 +304,6 @@ runEXOME_VARSCAN = segment {
 
 runEXOME_VARSCAN_mouse = segment {
         alignMEM +
-        sed +
         processPICARD +
         realignGATKwoutKnown +
         coverBED +
@@ -315,7 +313,6 @@ runEXOME_VARSCAN_mouse = segment {
 
 runEXOME_PINDEL = segment {
 	alignMEM +
-	sed +
 	processPICARD +
 	realignGATK +
 	indexSAM +
@@ -325,7 +322,6 @@ runEXOME_PINDEL = segment {
 
 runEXOME_PLATYPUS = segment {
         alignMEM +
-        sed +
         processPICARD +
 	realignGATK +
         coverBED +
@@ -391,7 +387,6 @@ somVARSCunpaired = {
 
 amplicon = segment {
         alignMEM +
-        sed +
         sortPIC +
         indexPIC + idxstatPIC +
         realignGATK + 
