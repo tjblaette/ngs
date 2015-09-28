@@ -19,6 +19,8 @@ alignSTAR = {
                 --outSAMattrRGline ID:0 PL:ILLUMINA LB:rna SM:$input1.fastq.prefix
                 --outSAMstrandField intronMotif 
                 --outSAMattributes NH HI AS nM NM
+		--chimSegmentMin 15   
+    		--chimJunctionOverhangMin 15
                 --readFilesIn  $input1.fastq $input2.fastq > $output.bam"""
 }
 
