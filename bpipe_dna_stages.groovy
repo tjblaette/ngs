@@ -53,7 +53,11 @@ alignSAMPE = { //it is not recommended to use this stage -> use alignMEM instead
             $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
                                 -e '/^@PG/s/\t/ /5' 
                                 -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' > $output.sam """
+                                -e '/^@PG/s/\t/ /5' | $PICARD SortSam
+        						INPUT=/dev/stdin
+        						OUTPUT=$output.bam
+        						CREATE_INDEX=true
+                					SORT_ORDER=coordinate"""
 }
 
 
@@ -70,7 +74,11 @@ alignMEM = {
         $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
                 		-e '/^@PG/s/\t/ /5' 
                			-e '/^@PG/s/\t/ /5' 
-                		-e '/^@PG/s/\t/ /5' > $output.sam """
+                		-e '/^@PG/s/\t/ /5' | $PICARD SortSam
+                                                        INPUT=/dev/stdin
+                                                        OUTPUT=$output.bam
+                                                        CREATE_INDEX=true
+                                                        SORT_ORDER=coordinate"""
 }
 
 
@@ -228,14 +236,15 @@ mpileupSAM = {
 }
 
 processSAM = segment {
-	sortSAM +
-        indexSAM + idxstatSAM +
+//	sortSAM + indexSAM + 
+	idxstatSAM +
         dedupSAM + indexSAM + idxstatSAM
 }
 
 
 processPICARD = segment {
-	sortPIC + idxstatPIC +
+//	sortPIC + 
+	idxstatPIC +
         dedupPIC + idxstatPIC
 }
 
@@ -387,8 +396,9 @@ somVARSCunpaired = {
 
 amplicon = segment {
         alignMEM +
-        sortPIC +
-        indexPIC + idxstatPIC +
+//        sortPIC +
+//        indexPIC + 
+	idxstatPIC +
         realignGATK + 
         coverBED +
         mpileupSAMexact +
