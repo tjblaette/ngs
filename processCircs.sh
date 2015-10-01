@@ -8,7 +8,7 @@ IN="$1"
 awk -v OFS='\t' '$1==$4 && $3==$6 && $7>=0 && (($3=="-" && $5>$2 && $5-$2<1000000) || ($3=="+" && $2>$5 && $2-$5<1000000)) {print $0,NR}' $IN | sort -k1,1 -k2,2n > ${IN}_circs.txt
 
 # count supporting reads of each junction and output as vector of equal length as input
-cut -f1-3 ${IN}_circs.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print $1}' > ${IN}_circsSupportingReadsCount.txt
+cut -f1-2,5 ${IN}_circs.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print $1}' > ${IN}_circsSupportingReadsCount.txt
      
 # combine read counts and junction file
 paste ${IN}_circsSupportingReadsCount.txt ${IN}_circs.txt | sort -k 16b,16 > ${IN}_circsWcounts.txt
