@@ -46,16 +46,22 @@ grep -wf <(cut -f6 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$
 join -1 16 -2 6 -t'	' ${IN}_circsWcounts.txt ${IN}_exonicJunctionsIntragenic_nonambiguous.bed > ${IN}_circsAnnotated.txt
 
 # create nicely formatted final output file with header
-echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\t5'shift\t3'shift\tsupportingReadID\tdonorSegmentStart\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentCIGAR\tgeneSymbol;geneID" > ${IN}_circsAnnotatedFinal.txt
-awk -v OFS='\t' '{print $2,$3,$4,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$25}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k6,6n >> ${IN}_circsAnnotatedFinal.txt
+#echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\t5'shift\t3'shift\tsupportingReadID\tdonorSegmentStart\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentCIGAR\tgeneSymbol;geneID" > ${IN}_circsAnnotatedFinal.txt
+awk -v OFS='\t' '{print $2,$3,$4,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$25}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k6,6n > ${IN}_circsAnnotatedFinal.txt
 
+# filter out paired-end reads that span regions beyond the backsplice
+# first calculate the reference length spanned by each segment
+echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\t5'shift\t3'shift\tsupportingReadID\tdonorSegmentStart\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentCIGAR\tgeneSymbol;geneID\tdonorSegmentLength\tacceptorSegmentLength" > ${IN}_circsAnnotatedFinal_withinBS.txt
+echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\t5'shift\t3'shift\tsupportingReadID\tdonorSegmentStart\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentCIGAR\tgeneSymbol;geneID\tdonorSegmentLength\tacceptorSegmentLength" > ${IN}_circsAnnotatedFinal_beyondBS.txt
+paste ${IN}_circsAnnotatedFinal.txt <(cut -f11 ${IN}_circsAnnotatedFinal.txt | sed -e 's/[MDpN]/\t/g' -e 's/[1-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}') <(cut -f13 ${IN}_circsAnnotatedFinal.txt | sed -e 's/[MDpN]/\t/g' -e 's/[1-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}') | awk '($5 == "+" && $10 >= $4 && $12 + $16 <=$3) || ($5 == "-" && $12 >= $3 && $10 + $15 <= $4)' > ${IN}_circsAnnotatedFinal_withinBS.txt 
+
+paste ${IN}_circsAnnotatedFinal.txt <(cut -f11 ${IN}_circsAnnotatedFinal.txt | sed -e 's/[MDpN]/\t/g' -e 's/[1-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}') <(cut -f13 ${IN}_circsAnnotatedFinal.txt | sed -e 's/[MDpN]/\t/g' -e 's/[1-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}') | awk '!(($5 == "+" && $10 >= $4 && $12 + $16 <=$3) || ($5 == "-" && $12 >= $3 && $10 + $15 <= $4))' > ${IN}_circsAnnotatedFinal_beyondBS.txt
 
 # extract splice donors and acceptors not overlapping any exon
 /NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_nonExonicDonor.bed
 /NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_nonExonicDonor.bed
 /NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_nonExonicAcceptor.bed
 /NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_nonExonicAcceptor.bed
-
 
 
 # delete temporary files
@@ -65,4 +71,9 @@ rm -f ${IN}_*+*
 rm -f ${IN}_*-*
 rm -f ${IN}_*exonicDonor.bed
 rm -f ${IN}_*exonicAcceptor.bed
+rm -f ${IN}_*Sorted.bed
+rm -f ${IN}_exonicJunctions.bed
 rm -f ${IN}_*genic.bed
+rm -f ${IN}_exonicJunctionsIntragenic_nonambiguous.bed
+rm -f ${IN}_circsAnnotated.txt
+rm -f ${IN}_circsAnnotatedFinal.txt
