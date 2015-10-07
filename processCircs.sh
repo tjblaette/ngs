@@ -122,18 +122,18 @@ join -1 16 -2 7 -t'	' ${IN}_circsWcounts.txt ${IN}_exonicJunctionsIntragenic_non
 # for junction shift, difference in +/- is already handled when remembering the change -> what is remembered is the coordinate shift itself irrespective of towards 3' or 5'
 # decrement end coordinates to obtain inclusive ends for GTF format
 # create nicely formatted final output file with header
-#echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentCIGAR\tpairedMateStart\pairedMateEnd\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
-awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$14,$19+$28,$20+$28-1,$16,$21,$22-1,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedFinal.txt
+#echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\pairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
+awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$18-$17,$14,$19+$28,$20+$28-1,$20-$19,$16,$21,$22-1,$22-$21,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedFinal.txt
 
 # filter out paired-end reads that span regions beyond the backsplice
 # for that, calculate the reference length spanned by each segment
 # also add an index to number unique junctions
-echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal_withinBS.txt
-echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal_beyondBS.txt
+echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal_withinBS.txt
+echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal_beyondBS.txt
 
-paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '($6 == "+" && $9>$5 && $13<$4 && $15>$5 && $16<$4) || ($6 == "-" && $10<$5 && $12>$4 && $15>$4 && $16<$5)' >> ${IN}_circsAnnotatedFinal_withinBS.txt 
+paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedFinal_withinBS.txt 
 
-paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '!(($6 == "+" && $9>$5 && $13<$4 && $15>$5 && $16<$4) || ($6 == "-" && $10<$5 && $12>$4 && $15>$4 && $16<$5))' >> ${IN}_circsAnnotatedFinal_beyondBS.txt 
+paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '!(($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5))' >> ${IN}_circsAnnotatedFinal_beyondBS.txt 
 
 
 
