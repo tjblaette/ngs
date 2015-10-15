@@ -187,15 +187,15 @@ echo "$lines calls remain after filtering and are saved to ${2}_filtered_LOH.csv
 get_flanking_sequence.sh ${2}_filtered_LOH.csv $4 $5
 
 
-#search for known leucemic candidate genes in germline calls, somatic_filtered_check and somatic_filtered_normalVarFreq30plus
+#search for known AML candidate genes in germline calls, somatic_filtered_check and somatic_filtered_normalVarFreq30plus
 head -n 1 $1 > ${2}_candidates.csv
-grep -i -f $3 ${2}_filtered_germline.csv >> ${2}_candidates.csv
-grep -i -f $3 ${2}_filtered_somatic_check.csv >> ${2}_candidates.csv
-grep -i -f $3 ${2}_filtered_somatic_normalVarFreq30plus.csv >> ${2}_candidates.csv
+grep -i -f $3 ${2}_filtered_germline.csv > ${2}_PREcandidates.csv
+grep -i -f $3 ${2}_filtered_somatic_check.csv >> ${2}_PREcandidates.csv
+grep -i -f $3 ${2}_filtered_somatic_normalVarFreq30plus.csv >> ${2}_PREcandidates.csv
 #remove duplicates (contained in both germline_filtered and because of normal_var_freq in somatic_check)
-sort -u ${2}_candidates.csv -o ${2}_candidates.csv 
+sort ${2}_PREcandidates.csv | uniq >> ${2}_candidates.csv
 echo "" >> ${2}_filter_statistic.txt
-echo "$(( $(wc -l ${2}_candidates.csv | cut -f1 -d' ') -1)) calls in ${2}_filtered_germline.csv, ${2}_filtered_somatic_check and ${2}_filtered_somatic_normalVarFreq30plus were matched to a candidate gene in $3 and saved to ${2}_candidates.csv" >> ${2}_filter_statistic.txt
+echo "$(( $(wc -l ${2}_candidates.csv | cut -f1 -d' ') -1)) calls in ${2}_filtered_germline.csv, ${2}_filtered_somatic_check and ${2}_filtered_somatic_normalVarFreq30plus were matched to an AML candidate gene in $3 and saved to ${2}_candidates.csv" >> ${2}_filter_statistic.txt
 
 
 #######################################################################################################################################################################################################
@@ -211,3 +211,4 @@ rm -f intermediate_files/*.coverBED_exon.txt
 rm -f intermediate_files/*otherinfo*
 rm -rf tmp/
 rm -rf JAVA_TMP/
+rm -f ${2}_PREcandidates.csv
