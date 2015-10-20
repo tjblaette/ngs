@@ -269,9 +269,9 @@ PINDEL = {
 
 processBED = {
     output.dir="intermediate_files"
-    exec """${BEDTOOLS}/intersectBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.intersect.vcf"""
-    exec "touch ${input2}_is_tumor.txt"
-    exec """${BEDTOOLS}/subtractBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.subtract.vcf"""
+    exec """${BEDTOOLS}/intersectBed -b $input2.vcf -a $input1.vcf > ${input1.prefix}.intersect.vcf"""
+    exec "touch ${input1}_is_tumor.txt"
+    exec """${BEDTOOLS}/subtractBed -b $input2.vcf -a $input1.vcf > ${input1.prefix}.subtract.vcf"""
     forward(glob("intermediate_files/*ct.vcf"))
 }
 
