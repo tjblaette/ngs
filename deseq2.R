@@ -47,16 +47,22 @@ sink(paste(input_file,"_DESeq2results_summary.txt",sep=""))
 summary(myresultsOrdered, alpha=my_alpha)
 sink()
 
-#plot gene counts to pdf
+#save normalized gene counts to text file
+countsTable <- c();
+
+#plot normalized gene counts to pdf
 pdf(paste(input_file,"_DESeq2results_geneCountPlots.pdf",sep=""))
   for (i in 1:(dim(mydds)[1]))
   {
     plotCounts(mydds, gene=i, intgroup="condition")
+    countsTable <- rbind(countsTable,plotCounts(mydds, gene=i, intgroup="condition", returnData=TRUE)[,1]) 
+    colnames(countsTable)[i] <- rownames(mydds)[i]
   }
 dev.off()
 
 #write deg analysis results to file
 write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""))
+write.table(countsTable, file=paste(input_file,"_DESeq2results_CountsTable.txt",sep=""))
 
 
 
