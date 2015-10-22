@@ -2,11 +2,11 @@
 
 
 IN="$1" #INPUT file with chimeric junctions discovered by STAR
-VAL=${4:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'} #INPUT file with known circRNAs for validation
+VAL=${2:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'} #INPUT file with known circRNAs for validation
 
 
 # extract circRNAs from STAR chimeric output
-awk -v OFS='\t' -v INDEX=1 '$1==$4 && $3==$6 && $7>0 && (($3=="-" && $5>$2 && $5-$2<1000000) || ($3=="+" && $2>$5 && $2-$5<1000000)) {print $0,INDEX; INDEX++;}' $IN | sort -k1,1 -k2,2n > ${IN}_circs.txt
+awk -v OFS='\t' -v INDEX=1 '$1==$4 && $3==$6 && $7>=0 && (($3=="-" && $5>$2 && $5-$2<1000000) || ($3=="+" && $2>$5 && $2-$5<1000000)) {print $0,INDEX; INDEX++;}' $IN | sort -k1,1 -k2,2n > ${IN}_circs.txt
 
 
 ######
@@ -26,7 +26,7 @@ P1_IMG="$(echo "$P1" | cut -f14 | sed -e 's/.*[MIDNSH]\([0-9-]\+\)p.*$/\1/')"
 P1_LS2b="$(echo "$P1" | cut -f14 | sed -e 's/.*p\(.*\)$/\1/' -e 's/[MDN]/\t/g' -e 's/[0-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}')"
 
 # calculate donor start/stop, acceptor start/stop and second mate start/stop
-# CAREFUL: start (inclusive) + segment length = end (exclusive)!!!
+# CAREFUL: start (inclusive) + segment length = end (exclusive)!!! BUT 1-based and not 0-based (SO NOT BED FORMATTED)
 P1_POSCOORDS="$(paste <(echo "$P1") <(paste <(echo "$P1_SS1") <(echo "$P1_LS1") <(echo "$P1_SS2a") <(echo "$P1_LS2a") <(echo "$P1_IMG") <(echo "$P1_LS2b") | awk -v OFS='\t' '{print $1,$1+$2,$3,$3+$4,$3+$4+$5,$3+$4+$5+$6}'))"
 
 
@@ -41,7 +41,7 @@ P2_SS2="$(echo "$P2" | cut -f13)"
 P2_LS2="$(echo "$P2" | cut -f14 | sed -e 's/[MDN]/\t/g' -e 's/[0-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}')"
 
 # calculate donor start/stop, acceptor start/stop and second mate start/stop
-P2_POSCOORDS="$(paste <(echo "$P2") <(paste <(echo "$P2_SS1a") <(echo "$P2_LS1a") <(echo "$P2_IMG") <(echo "$P2_LS1b") <(echo "$P2_SS2") <(echo "$P2_LS2") | awk -v OFS='\t' '{print $1+$2+$3,$1+$2+$3+$4,$5,$5+$6,$1,$1+$2}'))"
+P2_POSCOORDS="$(paste <(echo "$P2") <(paste <(echo "$P2_SS1a") <(echo "$P2_LS1a") <(echo "$P2_IMG") <(echo "$P2_LS1b") <(echo "$P2_SS2") <(echo "$P2_LS2") | awk -v OFS='\t' '{print $1+$2+$3-1,$1+$2+$3+$4,$5,$5+$6,$1,$1+$2}'))"
 
 
 # - strand, case1 (inter-mate gap within segment2):
@@ -55,7 +55,7 @@ N1_IMG="$(echo "$N1" | cut -f14 | sed -e 's/.*[MIDNSH]\([0-9-]\+\)p.*$/\1/')"
 N1_LS2b="$(echo "$N1" | cut -f14 | sed -e 's/.*p\(.*\)$/\1/' -e 's/[MDN]/\t/g' -e 's/[0-9]\+[SHI]//g' | awk -v OFS='\t'  '{SUM=$1; for(i=2;i<=NF;i++)SUM=SUM+$i; print SUM}')"
 
 # calculate donor start/stop, acceptor start/stop and second mate start/stop
-N1_POSCOORDS="$(paste <(echo "$N1") <(paste <(echo "$N1_SS1") <(echo "$N1_LS1") <(echo "$N1_SS2a") <(echo "$N1_LS2a") <(echo "$N1_IMG") <(echo "$N1_LS2b") | awk -v OFS='\t' '{print $1,$1+$2,$3+$4+$5,$3+$4+$5+$6,$3,$3+$4}'))"
+N1_POSCOORDS="$(paste <(echo "$N1") <(paste <(echo "$N1_SS1") <(echo "$N1_LS1") <(echo "$N1_SS2a") <(echo "$N1_LS2a") <(echo "$N1_IMG") <(echo "$N1_LS2b") | awk -v OFS='\t' '{print $1,$1+$2,$3+$4+$5-1,$3+$4+$5+$6,$3,$3+$4}'))"
 
 
 # - strand, case2 (intermate-gap within segment1):
@@ -121,11 +121,10 @@ join -1 16 -2 7 -t'	' ${IN}_circsWcounts.txt ${IN}_exonicJunctionsIntragenic_non
 
 # apply junction shift to junction and read segment coordinates (donor and acceptor only, mate remains unaffected!)
 # for junction shift, difference in +/- is already handled when remembering the change -> what is remembered is the coordinate shift itself irrespective of towards 3' or 5'
-# decrement end coordinates to obtain inclusive ends for GTF format -> other way around?? increment start to convert 0-based to 1-based start??
+# decrement end coordinates to obtain inclusive ends for GTF format 
 # create nicely formatted final output file with header
 #echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\pairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
-awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28+1,$18+$28,$18-$17,$14,$19+$28+1,$20+$28,$20-$19,$16,$21+1,$22,$22-$21,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedFinal.txt
-#awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$18-$17,$14,$19+$28,$20+$28-1,$20-$19,$16,$21,$22-1,$22-$21,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedFinal.txt
+awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$18-$17,$14,$19+$28,$20+$28-1,$20-$19,$16,$21,$22-1,$22-$21,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedFinal.txt
 
 # filter out paired-end reads that span regions beyond the backsplice
 # for that, calculate the reference length spanned by each segment
@@ -134,7 +133,10 @@ echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tsplic
 echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal_beyondBS.txt
 
 paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedFinal_withinBS.txt 
-awk -v OFS="\t" '$6=="+" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,ACCEPTOR,DONOR-1,COV,IND,STRAND} $6=="-" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,DONOR,ACCEPTOR-1,COV,IND,STRAND}' ${IN}_circsAnnotatedFinal_withinBS.txt | uniq > ${IN}_circsAnnotatedFinal_withinBS.bed
+# convert to BED & get exonic instead of intronic coords
+# start: -1 for STAR to BED, end stays the same for STAR to BED
+# depending on +/- strand convert first intronic to last exonic
+awk -v OFS="\t" '$6=="+" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,ACCEPTOR,DONOR-1,COV,IND,STRAND} $6=="-" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,DONOR,ACCEPTOR-1,COV,IND,STRAND}' ${IN}_circsAnnotatedFinal_withinBS.txt | sort -k3,3V -k4,4n -k5,5n | uniq > ${IN}_circsAnnotatedFinal_withinBS.bed
 
 paste <(cut -f2-4 ${IN}_circsAnnotatedFinal.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedFinal.txt | awk '!(($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5))' >> ${IN}_circsAnnotatedFinal_beyondBS.txt 
 
