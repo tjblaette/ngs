@@ -12,6 +12,6 @@ Bpipe.run {
 	"%.bam" * [ unpairedPLATYPUS ] +
         "*PLATYPUS.vcf" * [ processBED ] +
         "%ct.vcf" * [ conv2ANNO ] +
-        "%avinput" * [ tableANNOVAR ] 
+        "%avinput" * [ tableANNOVAR + finalSedPLATYPUS ] 
 }
 

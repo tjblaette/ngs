@@ -269,9 +269,9 @@ PINDEL = {
 
 processBED = {
     output.dir="intermediate_files"
-    exec """${BEDTOOLS}/intersectBed -b $input2.vcf -a $input1.vcf > ${input1.prefix}.intersect.vcf"""
-    exec "touch ${input1}_is_tumor.txt"
-    exec """${BEDTOOLS}/subtractBed -b $input2.vcf -a $input1.vcf > ${input1.prefix}.subtract.vcf"""
+    exec """${BEDTOOLS}/intersectBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.intersect.vcf"""
+    exec "touch ${input2}_is_tumor.txt"
+    exec """${BEDTOOLS}/subtractBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.subtract.vcf"""
     forward(glob("intermediate_files/*ct.vcf"))
 }
 
@@ -482,6 +482,9 @@ finalSedPINDEL = {
     exec """sed  -i -e 's/      /,/g' -e 's/,"\$//g' $input"""
 }
 
+finalSedPLATYPUS = {
+    exec """paste  -d ',' <(cut -d',' -f1-5 $input)  <(cut -d',' -f6- $input | sed -e 's/,"/\t/g' -e 's/"//g' -e 's/,/;/g' -e 's/\t/,/g' | cut -d',' -f1-12) <(cut -f1 $input | sed 's/^.*,\\([^,]*\\)\$/\\1/') <(cut -f2-7 $input | sed -e 's/\t/,/g')  <(cut -f8 $input | sed -e 's/;/\t/g' -e 's/,/;/g' -e 's/\t/,/g') <(cut -f9 $input) <(cut -f10 $input | sed -e 's/,/;/g' -e 's/:/,/g') | sed -e 's/^/"/' -e 's/,/","/g' -e 's/""/"/g' | sed '1 s/^.*\$/"Chr","Start","End","Ref","Alt","Func.refGene","Gene.refGene","GeneDetail.refGene","ExonicFunc.refGene","AAChange.refGene","genomicSuperDups","esp6500_all","1000g2014sep_all","snp138","cosmic70","ljb23_pp2hdiv","ljb23_sift","chr1","pos","NA","ref","alt",,"PASS","Fraction of reads around this variant that failed filters","Estimated population frequency of variant","Homopolymer run length around variant locus","Haplotype score measuring the number of haplotypes the variant is segregating into in a window","Worst goodness-of-fit value reported across all samples","Median minimum base quality for bases around variant","Root mean square of mapping qualities of reads at the variant position","tumor_reads_2plus|Total number of forward reads containing this variant","Total number of reverse reads tumor_reads_2_minuscontaining this variant","Posterior probability (phred scaled) that this variant segregates","Variant-quality|read-depth for this variant","Variants fail sequence-context filter. Surrounding sequence is low-complexity","Binomial P-value for strand bias test","Sourse_of_variants","Total coverage at this locus","Total forward strand coverage at this locus","Total reverse strand coverage at this locus","Total number of reads containing this variant","End position of calling window","Starting position of calling window","description","Genotype","Genotype log10-likelihoods for AA;AB and BB genotypes; where A = ref and B = variant","Variant fails goodness-of-fit test","Genotype quality as phred score","Number of reads covering variant location in this sample","Number of reads containing variant in this sample"/' > $output.csv"""
+}
 
 filterOutput = {
       var candidates : CANDIDATES
