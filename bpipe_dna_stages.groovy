@@ -45,7 +45,7 @@ alignSAMPE = { //it is not recommended to use this stage -> use alignMEM instead
     exec "$BWA aln -t $nkern $REF $input1.fastq > $output1.sai"
     exec "$BWA aln -t $nkern $REF $input2.fastq > $output2.sai"
     exec """$BWA sampe -P 
-            -r "@RG\tID:Sample\tSM:Sample\tPL:illumina\tCN:exome" 
+            -r "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
             $REF 
             $output1.sai 
             $output2.sai 
@@ -68,7 +68,7 @@ alignMEM = {
     exec """$BWA mem 
 	-M
         -t $nkern 
-	-R '@RG\tID:Sample\tSM:Sample\tPL:illumina\tCN:exome' 
+	-R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
         $REF
         $input1.fastq
         $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
@@ -289,6 +289,11 @@ unpairedPLATYPUS = {
     exec "$PLATYPUS callVariants --refFile=$REF --bamFiles=$input.bam --assemble=1 --assembleBrokenPairs=1 --nCPU=$nkern --output=$output.vcf"
 }
 
+pairedPLATYPUS = {
+    var nkern : 48
+    output.dir="intermediate_files"
+    exec "$PLATYPUS callVariants --refFile=$REF --bamFiles=$input1.bam,$input2.bam --assemble=1 --assembleBrokenPairs=1 --nCPU=$nkern --output=$output.vcf"
+}
 
 haplocGATK = {
     var nkern : 24
