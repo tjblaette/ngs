@@ -157,7 +157,7 @@ VAL_PREF="$(basename "$VAL" ".bed")"
 
 
 
-## get correct junction strand (do this earlier in the script once it works!?)
+## get correct junction strand
 # extract read IDs of circRNA reads that passed all filters & search for associated SAM records
 # need grep -w to prevent extracting records whose readIDs  contain substrings queried
 # however grep -w is much slower (why?) so I use the faster command without it first and then call -w on this much smaller subset
