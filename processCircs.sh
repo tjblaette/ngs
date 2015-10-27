@@ -3,7 +3,8 @@
 
 IN="$1" #INPUT file with chimeric junctions discovered by STAR
 CHIMSAM="$2" # INPUT file with chimeric reads discovered by STAR
-VAL=${3:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'} #INPUT file with known circRNAs for validation
+STRANDED="${3:-false}"
+VAL=${4:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'} #INPUT file with known circRNAs for validation
 
 
 # extract circRNAs from STAR chimeric output
@@ -100,7 +101,14 @@ awk -v OFS='\t' -v INDEX=0 '$4=="-" {for(i=$6-$10-2;i<$6+$9-1;i++){INDEX++; prin
 /NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_exonicAcceptor.bed
 /NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_exonicAcceptor.bed
 
-# sort results as required by join
+# extract splice donors and acceptors not overlapping any exon
+/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_nonExonicDonor.bed
+/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_nonExonicDonor.bed
+/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_nonExonicAcceptor.bed
+/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_nonExonicAcceptor.bed
+
+
+# sort annotated exonic results as required by join
 sort -k7b,7 ${IN}_exonicDonor.bed > ${IN}_exonicDonorSorted.bed
 sort -k7b,7 ${IN}_exonicAcceptor.bed > ${IN}_exonicAcceptorSorted.bed
 
@@ -130,32 +138,30 @@ awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$18-$17,
 # filter out paired-end reads that span regions beyond the backsplice
 # for that, calculate the reference length spanned by each segment
 # also add an index to number unique junctions
-echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
+echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedShifted_withinBS.txt
 echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedShifted_beyondBS.txt
+echo -e "#chr\tStart\tEnd\tsupportingReads\tIndex\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
 
-paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedFinal.txt 
-# convert to BED & get exonic instead of intronic coords
-# start: -1 for STAR to BED, end stays the same for STAR to BED
-# depending on +/- strand convert first intronic to last exonic
-awk -v OFS="\t" '$6=="+" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,ACCEPTOR,DONOR-1,COV,IND,STRAND} $6=="-" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,DONOR,ACCEPTOR-1,COV,IND,STRAND}' ${IN}_circsAnnotatedFinal.txt | sort -k3,3V -k4,4n -k5,5n | uniq > ${IN}_circsAnnotatedFinal.bed
-
+paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedShifted_withinBS.txt 
 paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '!(($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5))' >> ${IN}_circsAnnotatedShifted_beyondBS.txt 
 
+# convert to 6-column BED (to include strand for stranded protocols)  & get exonic instead of intronic coords
+# start: -1 for STAR to BED, end stays the same for STAR to BED
+# depending on +/- strand convert first intronic to last exonic
+#awk -v OFS="\t" '$6=="+" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,ACCEPTOR,DONOR-1,COV,IND,STRAND} $6=="-" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; print CHR,DONOR,ACCEPTOR-1,COV,IND,STRAND}' ${IN}_circsAnnotatedShifted_withinBS.txt | sort -k1,1V -k2,3n | uniq | awk -v OFS='\t' '{$5=NR; print $0}' >> ${IN}_circsAnnotatedFinal.bed
+awk -v OFS="\t" '$6=="+" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; $1=CHR;$2=ACCEPTOR;$3=DONOR-1;$4=COV;$5=IND;$6=STRAND; print $0} $6=="-" {IND=$1;COV=$2;CHR=$3;DONOR=$4;ACCEPTOR=$5;STRAND=$6; $1=CHR;$2=DONOR;$3=ACCEPTOR-1;$4=COV;$5=IND;$6=STRAND; print $0}' ${IN}_circsAnnotatedShifted_withinBS.txt | sort -k1,1V -k2,3n  >> ${IN}_circsAnnotatedFinal.txt
 
-# extract splice donors and acceptors not overlapping any exon
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_nonExonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_nonExonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_nonExonicAcceptor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_nonExonicAcceptor.bed
-
-
-# compare results to validation file $VAL
-VAL_PREF="$(basename "$VAL" ".bed")"
-/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -a ${IN}_circsAnnotatedFinal.bed -b $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}.bed
-/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -v -a ${IN}_circsAnnotatedFinal.bed -b $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}_oursOnly.bed
-/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -v -b ${IN}_circsAnnotatedFinal.bed -a $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}_theirsOnly.bed
+cut -f1-6 ${IN}_circsAnnotatedFinal.txt | uniq > ${IN}_circsAnnotatedFinal.bed
 
 
+
+# for stranded protocols, determine the correct strand and collapse read information for identical junctions
+# for unstranded protocols, replace strand information with a place holder and collapse read information for identical junctions
+
+if [ $STRANDED = true ]
+then
+
+######   ------>    Change Final.txt to Shifted_withinBS.txt below this point!!!!
 
 ## get correct junction strand
 # extract read IDs of circRNA reads that passed all filters & search for associated SAM records
@@ -163,12 +169,49 @@ VAL_PREF="$(basename "$VAL" ".bed")"
 # however grep -w is much slower (why?) so I use the faster command without it first and then call -w on this much smaller subset
 grep -f <(cut -f20 ${IN}_circsAnnotatedFinal.txt | tail -n +2) $CHIMSAM > ${IN}_circsAnnotatedFinal_pre.sam
 grep -w -f <(cut -f20 ${IN}_circsAnnotatedFinal.txt | tail -n +2) ${IN}_circsAnnotatedFinal_pre.sam > ${IN}_circsAnnotatedFinal.sam
-        
+
+################################
 # extract SAM records of all non-chimeric mates
-grep -f  <(cut -f10 ${IN}_circsAnnotatedFinal.sam | sort | uniq -c | awk '$1==1 {print $2}') ${IN}_circsAnnotatedFinal.sam > ${IN}_circsAnnotatedFinal_mate.sam
-        
+#grep -f  <(cut -f10 ${IN}_circsAnnotatedFinal.sam | sort | uniq -c | awk '$1==1 {print $2}') ${IN}_circsAnnotatedFinal.sam > ${IN}_circsAnnotatedFinal_mate.sam
 # get BAM flags from these records
-get_bamflags_combi.sh ${IN}_circsAnnotatedFinal_mate.sam
+#get_bamflags_combi.sh ${IN}_circsAnnotatedFinal_mate.sam
+#################################
+
+# get read2 of each chimeric read pair -> the strand assigned to read2 must be assigned to the circRNA
+# f 128 selects only the second read of each pair
+# f 16 selects only reads mapped to the reverse strand
+# F 256 excludes the non-primary alignments for those read2 alignments that cover the chimeric circRNA junction (this results in 1 SAM record per circRNA)
+samtools view -S -t /NGS/refgenome/GATK/ucsc.hg19.fasta.fai -f 144 -F 256 ${IN}_circsAnnotatedFinal.sam > ${IN}_circsAnnotatedFinal_R2-.sam
+samtools view -S -t /NGS/refgenome/GATK/ucsc.hg19.fasta.fai -f 128 -F 272 ${IN}_circsAnnotatedFinal.sam > ${IN}_circsAnnotatedFinal_R2+.sam
+
+# assign the strand based on the extracted SAM records
+grep -f <(cut -f1 ${IN}_circsAnnotatedFinal_R2-.sam) ${IN}_circsAnnotatedFinal.txt | awk -v OFS='\t' '{$6="-"; print $0}' > ${IN}_circsAnnotatedFinal.txt_correctStrand
+grep -f <(cut -f1 ${IN}_circsAnnotatedFinal_R2+.sam) ${IN}_circsAnnotatedFinal.txt | awk -v OFS='\t' '{$6="+"; print $0}' >> ${IN}_circsAnnotatedFinal.txt_correctStrand
+
+sort -k1,1n ${IN}_circsAnnotatedFinal.txt_correctStrand > ${IN}_circsAnnotatedFinal.txt_correctStrandSorted
+
+# redo supporting read count -> could have changed due to beyond BS filter
+#####  ---> NOT DONE YET!!!
+
+else
+
+   # recount supporting reads of each junction and output as vector of equal length as input
+   cut -f1-3 "${IN}_circsAnnotatedFinal.txt" | uniq -c | awk -v OFS='\t' '{ for (i=1; i<= $1; i++) print $1,NR-1}' | sed '1s/.*/supportingsReads\tIndex/' > ${IN}_circsSupportingReadsCount.txt
+
+   # combine read counts and junction file
+   paste "${IN}_circsSupportingReadsCount.txt" "${IN}_circsAnnotatedFinal.txt" | awk -v OFS='\t' '{$6=$1; $7=$2; print $0}' | cut -f3- > ${IN}_circsAnnotatedFinal.txt_wCounts && mv ${IN}_circsAnnotatedFinal.txt_wCounts ${IN}_circsAnnotatedFinal.txt
+
+   # update BED file as well -> new index & read counts, do not require strand information 
+   cut -f1-3 ${IN}_circsAnnotatedFinal.txt | uniq > ${IN}_circsAnnotatedFinal.bed
+fi
+
+
+# VALIDATION
+# compare results to validation file $VAL
+VAL_PREF="$(basename "$VAL" ".bed")"
+/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -a ${IN}_circsAnnotatedFinal.bed -b $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}.bed
+/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -v -a ${IN}_circsAnnotatedFinal.bed -b $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}_oursOnly.bed
+/NGS/links/bedtools/intersectBed -wa -wb -f 1 -r -v -b ${IN}_circsAnnotatedFinal.bed -a $VAL > ${IN}_circsAnnotatedFinal_intersect_${VAL_PREF}_theirsOnly.bed
 
 
 # delete temporary files
