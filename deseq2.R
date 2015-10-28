@@ -52,13 +52,15 @@ countsTable <- c();
 
 #plot normalized gene counts to pdf
 pdf(paste(input_file,"_DESeq2results_geneCountPlots.pdf",sep=""))
-  for (i in 1:(dim(mydds)[1]))
+for (i in 1:(dim(mydds)[1]))
   {
     plotCounts(mydds, gene=i, intgroup="condition")
     countsTable <- rbind(countsTable,plotCounts(mydds, gene=i, intgroup="condition", returnData=TRUE)[,1]) 
-    colnames(countsTable)[i] <- rownames(mydds)[i]
+    rownames(countsTable)[i] <- rownames(mydds)[i]
   }
 dev.off()
+
+colnames(countsTable) <- colnames(mydds)
 
 #write deg analysis results to file
 write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""))
