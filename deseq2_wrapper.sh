@@ -2,19 +2,24 @@
 
 
 # $1 = input file for DESeq2
-# $2 = biomart DB for gene id conversion
-# $3 = alpha for DEG statistic (default:0.1)
-# $4 = min absolute LFC tested for (default:0)
+# $2 = alpha for DEG statistic (default:0.1)
+# $3 = biomart DB for gene id conversion
+# $4 = min absolute LFC tested for (default:0) -> does not take any effect because R function in deseq does not accept variable for lfc parameter
 
-Rscript deseq2.R $1 $3 $4
+IN=$1
+ALPHA=${2:-0.1}
+BIOMART=${3:-'/NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
+LFC=${4:-0} # does not take any effect!
 
-head -1 ${1}_DESeq2results.txt > ${1}_DESeq2results_sorted.txt
-tail -n +2 ${1}_DESeq2results.txt | sort >> ${1}_DESeq2results_sorted.txt
-sed -i 's/"//g' ${1}_DESeq2results_sorted.txt
+Rscript /NGS/myscripts/deseq2.R $IN $ALPHA $LFC
 
-join --header ${1}_DESeq2results_sorted.txt $2 > ${1}_DESeq2results_annotated.txt
+head -1 ${IN}_DESeq2results.txt > ${IN}_DESeq2results_sorted.txt
+tail -n +2 ${IN}_DESeq2results.txt | sort >> ${IN}_DESeq2results_sorted.txt
+sed -i 's/"//g' ${IN}_DESeq2results_sorted.txt
 
-sort -g -k 7,7 ${1}_DESeq2results_annotated.txt > ${1}_DESeq2results_sorted.txt
-grep -wv 'NA' ${1}_DESeq2results_sorted.txt >  ${1}_DESeq2results_sorted_woutNA.txt
+join --header ${IN}_DESeq2results_sorted.txt $BIOMART > ${IN}_DESeq2results_annotated.txt
 
-rm ${1}_DESeq2results_annotated.txt
+sort -g -k 7,7 ${IN}_DESeq2results_annotated.txt > ${IN}_DESeq2results_sorted.txt
+grep -wv 'NA' ${IN}_DESeq2results_sorted.txt >  ${IN}_DESeq2results_sorted_woutNA.txt
+
+rm ${IN}_DESeq2results_annotated.txt

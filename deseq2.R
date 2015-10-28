@@ -56,16 +56,13 @@ for (i in 1:(dim(mydds)[1]))
   {
     plotCounts(mydds, gene=i, intgroup="condition")
     countsTable <- rbind(countsTable,plotCounts(mydds, gene=i, intgroup="condition", returnData=TRUE)[,1]) 
-    rownames(countsTable)[i] <- rownames(mydds)[i]
   }
 dev.off()
 
 colnames(countsTable) <- colnames(mydds)
+rownames(countsTable) <- rownames(mydds)
 
 #write deg analysis results to file
-write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""))
-write.table(countsTable, file=paste(input_file,"_DESeq2results_CountsTable.txt",sep=""))
-
-
-
+write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
+write.table(countsTable, file=paste(input_file,"_DESeq2results_CountsTable.txt",sep=""),sep="\t")
 
