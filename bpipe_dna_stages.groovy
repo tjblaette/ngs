@@ -296,13 +296,14 @@ pairedPLATYPUS = {
 }
 
 haplocGATK = {
-    var nkern : 24
+    var nkern : 48
     output.dir="intermediate_files"
     exec """$GATK
         -T HaplotypeCaller
         -nct $nkern
         -R $REF
-        -I $input.bam
+        -I $input1.bam
+        -I $input2.bam
         -o $output.vcf"""
 }
 
