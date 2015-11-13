@@ -11,6 +11,7 @@ alignSTAR = {
                 --runThreadN $nkern
                 --genomeDir $REFDIR 
                 --twopassMode Basic
+		--quantMode GeneCounts
                 --outStd BAM_SortedByCoordinate
                 --outSAMtype BAM SortedByCoordinate
                 --outFileNamePrefix ./.$input1.fastq.prefix
