@@ -3,12 +3,12 @@
 
 # $1 = input file for DESeq2
 # $2 = alpha for DEG statistic (default:0.1)
-# $3 = biomart DB for gene id conversion
+# $3 = DB for gene id conversion
 # $4 = min absolute LFC tested for (default:0) -> does not take any effect because R function in deseq does not accept variable for lfc parameter
 
 IN=$1
 ALPHA=${2:-0.1}
-BIOMART=${3:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation.gtf'}   #/NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
+BIOMART=${3:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
 LFC=${4:-0} # does not take any effect!
 
 # check if the gene ID to Symbol conversion table exists already
