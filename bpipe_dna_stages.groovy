@@ -142,16 +142,13 @@ dedupPIC = {
 	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
 }
 
-
 coverBED = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
-    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -d -sorted -g ${REF}.genomeFile > ${output.txt.prefix}_exon.txt"
-    exec "${NGS}/calc_cvg/calc_cvg ${output.txt.prefix}_exon.txt $input1.fastq $input2.fastq > $output.txt"
-    exec "rm ${output.txt.prefix}_exon.txt" //irgendwie loescht er das nicht?? 
+    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -hist | grep '^all' | sort -k2,2nr | awk -v OFS='\t' -v CUMSUM=0 -v CUMFREQ=0.0 -v TOTALONTARGET=0 '{CUMSUM=CUMSUM+\$3; CUMFREQ=(100 * CUMSUM/\$4); TOTALONTARGET=TOTALONTARGET + (\$2*\$3); print \$0,CUMSUM,CUMFREQ,TOTALONTARGET;}' | sort -k2,2n > $output.txt"
+    exec "formatCoverage.sh $output.txt $input1.fastq $input2.fastq 0 1 10 15 50 100 120 200 500 1000 1500 2000 2500 > $output.summary"
     forward input.bam
 }
-
 
 realignGATK = {
     output.dir="intermediate_files"
