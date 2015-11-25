@@ -15,7 +15,7 @@ LFC=${4:-0} # does not take any effect!
 # if it does not, create it now
 if [ ! -e "${BIOMART%.gtf}_geneIDtoSymbol.txt" ]
 then
-	tail -n +6 "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z "_]//g' -e 's/;/\t/' | sort -k1,1b | uniq > ${BIOMART%.gtf}_geneIDtoSymbol.txt
+	cat "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z]\+_[a-z]\+//g' -e 's/;/\t/' -e 's/"//g' -e 's/ //g' | grep -v 'level' | sort -k1,1b | uniq > ${BIOMART%.gtf}_geneIDtoSymbol.txt
 fi
 
 
