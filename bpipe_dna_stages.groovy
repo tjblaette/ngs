@@ -145,8 +145,9 @@ dedupPIC = {
 coverBED = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
-    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -hist | grep '^all' | sort -k2,2nr | awk -v OFS='\t' -v CUMSUM=0 -v CUMFREQ=0.0 -v TOTALONTARGET=0 '{CUMSUM=CUMSUM+\$3; CUMFREQ=(100 * CUMSUM/\$4); TOTALONTARGET=TOTALONTARGET + (\$2*\$3); print \$0,CUMSUM,CUMFREQ,TOTALONTARGET;}' | sort -k2,2n > $output.txt"
-    exec "formatCoverage.sh $output.txt $input1.fastq $input2.fastq 0 1 10 15 50 100 120 200 500 1000 1500 2000 2500 > $output.summary"
+    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -hist -sorted -g ${REF}.genomeFile > $output.txt"
+    exec "grep '^all' $output.txt | sort -k2,2nr | awk -v OFS='\t' -v CUMSUM=0 -v CUMFREQ=0.0 -v TOTALONTARGET=0 '{CUMSUM=CUMSUM+\$3; CUMFREQ=(100 * CUMSUM/\$4); TOTALONTARGET=TOTALONTARGET + (\$2*\$3); print \$0,CUMSUM,CUMFREQ,TOTALONTARGET;}' | sort -k2,2n > $output.nice"
+    exec "formatCoverage.sh $output.nice $input1.fastq $input2.fastq 0 1 10 15 50 100 120 200 500 1000 1500 2000 2500 > $output.summary"
     forward input.bam
 }
 
