@@ -44,4 +44,4 @@ grep -wv 'NA' ${IN}_DESeq2results_annotated.txt >  ${IN}_DESeq2results_annotated
 #rm ${IN}_DESeq2results_annotated.txt
 rm -f ${IN}_DESeq2results_sorted.txt
 rm -f ${IN}_DESeq2results_CountsTable.txt
-rm -f ${IN}_DESeq2results.txt
+#rm -f ${IN}_DESeq2results.txt
