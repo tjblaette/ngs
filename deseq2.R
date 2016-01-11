@@ -22,6 +22,60 @@ fromFile <- function(input) {
 
 
 mydds <- fromFile(input_file)
+
+###########################################################################################
+###########################################################################################
+# PREPARE FOR EXPLORATORY ANALYSIS
+
+# should we filter out genes with 0 expression?
+# mydds <- mydds[ rowSums(counts(mydds)) > 0, ]
+
+# get normalized read counts
+counts <- counts(mydds,normalized=TRUE)
+
+# calculate coefficient of variation
+standev <- apply(counts,1,sd)
+avrg <- apply(counts,1,mean)
+cv <- standev/avrg
+
+# select genes with highest cv
+select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
+
+# transform counts and apply cv-based selection
+trans <- rlog(mydds)
+transCounts <- assay(trans)[select,]
+
+
+# PREPARE COUNT CLUSTERING
+# extract sample labels
+df <- as.data.frame(colData(mydds)[,"condition"])
+rownames(df) <- colnames(mydds)
+colnames(df) <- "condition"
+
+
+# PREPARE INTERSAMPLE DISTANCE CLUSTERING
+sampleDists <- dist(t(transCounts))
+sampleDistMatrix <- as.matrix(sampleDists)
+
+
+# PREPARE PCA
+pca <- plotPCA(trans, intgroup="condition")
+
+# PLOT
+#1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV
+#2: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV
+#3: PCA -> based on whole data set
+library(pheatmap)
+
+pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
+print(pca)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df)
+pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
+dev.off()
+
+
+###################################################################################################
+# PROCESS RESULTS OF DGE ANALYSIS 
 myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThreshold=my_lfc)
 
 
