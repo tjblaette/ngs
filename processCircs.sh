@@ -120,8 +120,11 @@ awk -v OFS='\t' '$11==$21' ${IN}_exonicJunctions.bed > ${IN}_exonicJunctionsIntr
 awk -v OFS='\t' '$11!=$21' ${IN}_exonicJunctions.bed > ${IN}_exonicJunctionsIntergenic.bed
 
 # extract ambiguous and nonambiguous annotations
-grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed > ${IN}_exonicJunctionsIntragenic_ambiguous.bed 
-grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed 
+#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed > ${IN}_exonicJunctionsIntragenic_ambiguous.bed 
+#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed 
+awk 'NR==FNR{a[$0]=1; next} {for(i in a){if($7==i){print $0}}} ' <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_ambiguous.bed
+awk 'NR==FNR{a[$0]=1; next} {for(i in a){if($7==i){print $0}}} ' <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed
+
 # join annotated exonic intragenic junctions with original circRNA junctions based on first index
 join -1 16 -2 7 -t'	' ${IN}_circsWcounts.txt ${IN}_exonicJunctionsIntragenic_nonambiguous.bed > ${IN}_circsAnnotated.txt
 
