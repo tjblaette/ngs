@@ -18,6 +18,6 @@ Bpipe.run {
 //	"%_R*.fastq" * [ mergedAmplicon ] +
 //        "%R1%merged.csv" * [ final_sed ]
 //      "%_R*.fastq" * [ alignSTAR + countHTSeq ]
-	"%_R*.fastq" * [ alignSTAR ]
+	"%_R*.fastq" * [ alignSTAR + indexPIC ]
 }
 
