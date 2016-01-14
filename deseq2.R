@@ -23,12 +23,13 @@ fromFile <- function(input) {
 
 mydds <- fromFile(input_file)
 
+# should we filter out genes with basically no expression? YES
+mydds <- mydds[ rowSums(counts(mydds)) > 1, ]
+
+
 ###########################################################################################
 ###########################################################################################
 # PREPARE FOR EXPLORATORY ANALYSIS
-
-# should we filter out genes with 0 expression?
-# mydds <- mydds[ rowSums(counts(mydds)) > 0, ]
 
 # get normalized read counts
 counts <- counts(mydds,normalized=TRUE)
@@ -69,8 +70,8 @@ library(pheatmap)
 
 pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
 print(pca)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df)
-pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7)
+pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7)
 dev.off()
 
 
