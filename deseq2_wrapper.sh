@@ -41,6 +41,11 @@ join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") ${IN}_DES
 #sort -g -k 7,7 ${IN}_DESeq2results_annotated.txt > ${IN}_DESeq2results_sorted.txt
 grep -wv 'NA' ${IN}_DESeq2results_annotated.txt >  ${IN}_DESeq2results_annotated_woutNA.txt
 
+# annotate file with entrez gene IDs as well (for SPIA)
+ENTREZ="/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt"
+join -t '	' <( tail -n +2 ${IN}_DESeq2results_annotated_woutNA.txt) <(tail -n +2 $ENTREZ) > ${IN}_DESeq2results_annotated_woutNA_wEntrezIDs.txt
+
+
 #rm ${IN}_DESeq2results_annotated.txt
 rm -f ${IN}_DESeq2results_sorted.txt
 rm -f ${IN}_DESeq2results_CountsTable.txt
