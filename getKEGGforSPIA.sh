@@ -7,6 +7,7 @@ ORG=$1 #organism, hsa for human, mmu for mouse
 mkdir -p /NGS/KEGG/${ORG}
 cd /NGS/KEGG/${ORG}
 
+rm -f pathway
 
 # get list of pathways for $ORG
 wget "http://rest.kegg.jp/link/${ORG}/pathway"
