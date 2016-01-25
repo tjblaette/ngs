@@ -23,10 +23,10 @@ getVersions = {
 
 qc = {
     var nkern : 24
-    // first command creates shuffled subsamples -> / 20 means that 1/20 of all reads are subsampled -> /4 * 4 garantuees that result is multiple of 4; second command performs qc on subsample
-    exec """paste "$input1.fastq" "$input2.fastq" | awk -v FS='\t' '{if(NR % 4 == 1){NEXT=\$0}else{NEXT=NEXT" "\$0; if(NR % 4 == 0){print NEXT}}}' | shuf | sed 's/ /\\n/g' | awk -v FS='\t' -v LINES=\$(( \$(wc -l $input1.fastq  | awk '{print \$1}') / 4 / 20 * 4 )) 'NR <= LINES {print \$1 > "${input1.fastq.prefix}.shuffled"; print \$2 > "${input2.fastq.prefix}.shuffled"}' """
-    exec """$QC -pe ${input1.fastq.prefix}.shuffled ${input2.fastq.prefix}.shuffled 2 A -c $nkern -onlyStat -o FASTQ_QC"""
-    //exec "$QC -pe $input1.fastq $input2.fastq 2 A -c $nkern -onlyStat -o FASTQ_QC"
+    // subsample FASTQ files for QC -> take every 25th read only -> (NR = read fraction ^-1 * 4 = 25 * 4 = 100)
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input1.fastq > ${input1.prefix}.shuffled"
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input2.fastq > ${input2.prefix}.shuffled"
+    exec "$QC -pe ${input1.prefix}.shuffled ${input2.prefix}.shuffled 2 A -c $nkern -onlyStat -o FASTQ_QC"
 }
 
 trim = { 
