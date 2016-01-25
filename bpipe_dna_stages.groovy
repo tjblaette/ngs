@@ -24,9 +24,9 @@ getVersions = {
 qc = {
     var nkern : 24
     // subsample FASTQ files for QC -> take every 25th read only -> (NR = read fraction ^-1 * 4 = 25 * 4 = 100)
-    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input1.fastq > ${input1.prefix}.shuffled"
-    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input2.fastq > ${input2.prefix}.shuffled"
-    exec "$QC -pe ${input1.prefix}.shuffled ${input2.prefix}.shuffled 2 A -c $nkern -onlyStat -o FASTQ_QC"
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input1.fastq > ${input1.prefix}.subsample"
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input2.fastq > ${input2.prefix}.subsample"
+    exec "$QC -pe ${input1.prefix}.subsample ${input2.prefix}.subsample 2 A -c $nkern -onlyStat -o FASTQ_QC"
 }
 
 trim = { 
