@@ -201,13 +201,4 @@ echo "$(( $(wc -l ${2}_candidates.csv | cut -f1 -d' ') -1)) calls in ${2}_filter
 #######################################################################################################################################################################################################
 
 #delete temporary files
-rm -f *.pileup
-rm -f intermediate_files/*.sam
-rm -f intermediate_files/*somVARSC.*
-rm -f intermediate_files/*.alignMEM.sortPIC.ba*
-rm -f intermediate_files/*dedupPIC.ba*
-rm -f intermediate_files/*.coverBED_exon.txt
-rm -f intermediate_files/*otherinfo*
-rm -rf tmp/
-rm -rf JAVA_TMP/
-rm -f ${2}_PREcandidates.csv
+bpipe_finish.sh
