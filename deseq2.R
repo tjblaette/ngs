@@ -70,7 +70,7 @@ library(pheatmap)
 
 pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
 print(pca)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row")
 pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7)
 dev.off()
 
