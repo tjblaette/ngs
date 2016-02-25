@@ -33,6 +33,8 @@ mydds <- mydds[ rowSums(counts(mydds)) > 1, ]
 
 # get normalized read counts
 counts <- counts(mydds,normalized=TRUE)
+write.table(counts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalized.txt", sep=""))
+
 
 # calculate coefficient of variation
 standev <- apply(counts,1,sd)
@@ -45,6 +47,7 @@ select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
 # transform counts and apply cv-based selection
 trans <- rlog(mydds)
 transCounts <- assay(trans)[select,]
+write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
 
 # PREPARE COUNT CLUSTERING
@@ -95,22 +98,14 @@ sink()
 #to convert ENSEMBL gene ids to gene symbols, I have to remove the decimal
 rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
 
-#save normalized gene counts to text file
-countsTable <- c();
-
 #plot normalized gene counts to pdf
 pdf(paste(input_file,"_DESeq2results_geneCountPlots.pdf",sep=""))
 for (i in 1:(dim(mydds)[1]))
   {
     plotCounts(mydds, gene=i, intgroup="condition")
-    countsTable <- rbind(countsTable,plotCounts(mydds, gene=i, intgroup="condition", returnData=TRUE)[,1]) 
   }
 dev.off()
 
-colnames(countsTable) <- colnames(mydds)
-rownames(countsTable) <- rownames(mydds)
-
 #write deg analysis results to file
 write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
-write.table(countsTable, file=paste(input_file,"_DESeq2results_CountsTable.txt",sep=""),sep="\t")
 

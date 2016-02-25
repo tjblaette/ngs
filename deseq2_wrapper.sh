@@ -21,18 +21,26 @@ then
 fi
 
 
-
+# RUN DESEQ2 SCRIPT
 Rscript /NGS/myscripts/deseq2.R $IN $ALPHA $LFC
 
-# annotate normalized gene counts with gene symbols in addition to ENSEMBL IDs
-# add header
-echo -n 'geneID	geneSymbol	' > ${IN}_DESeq2results_countsTable.txt
-head -n 1 ${IN}_DESeq2results_CountsTable.txt | sed -e 's/"//g' >> ${IN}_DESeq2results_countsTable.txt
-# add annotated gene counts
-join -t '	' "${BIOMART%.gtf}_geneIDtoSymbol.txt" <(sort -k1,1b "${IN}_DESeq2results_CountsTable.txt" | sed -e 's/"//g') >> ${IN}_DESeq2results_countsTable.txt
+
+# ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
+for COUNTS in "${IN}_DESeq2results_CountsNormalized.txt" "${IN}_DESeq2results_CountsNormalizedTransformed.txt"
+do
+  # define output file name for annotated file
+  NEW_FILE=$(echo $COUNTS | sed 's/CountsNormalized/countsNormalized/')
+
+  # add header
+  echo -n 'geneID	geneSymbol	' > $NEW_FILE
+  head -n 1 "$COUNTS" | sed -e 's/"//g' >> $NEW_FILE
+  
+  # add annotated gene counts
+  join -t '	' "${BIOMART%.gtf}_geneIDtoSymbol.txt" <(sort -k1,1b "$COUNTS" | sed -e 's/"//g') >> $NEW_FILE
+done
 
 
-
+# ANNOTATE DESEQ2 RESULTS with gene symbols
 tail -n +2 ${IN}_DESeq2results.txt | sort > ${IN}_DESeq2results_sorted.txt
 sed -i 's/"//g' ${IN}_DESeq2results_sorted.txt
 
@@ -43,11 +51,11 @@ join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") ${IN}_DES
 #sort -g -k 7,7 ${IN}_DESeq2results_annotated.txt > ${IN}_DESeq2results_sorted.txt
 grep -wv 'NA' ${IN}_DESeq2results_annotated.txt >  ${IN}_DESeq2results_annotated_woutNA.txt
 
-# annotate file with entrez gene IDs as well (for SPIA)
+# ANNOTATE with entrez gene IDs as well (for SPIA)
 join -t '	' <( tail -n +2 ${IN}_DESeq2results_annotated_woutNA.txt) <(tail -n +2 $ENTREZ) > ${IN}_DESeq2results_annotated_woutNA_wEntrezIDs.txt
 
 
 #rm ${IN}_DESeq2results_annotated.txt
 rm -f ${IN}_DESeq2results_sorted.txt
-rm -f ${IN}_DESeq2results_CountsTable.txt
+rm -f ${IN}_DESeq2results_CountsNormalized*.txt
 #rm -f ${IN}_DESeq2results.txt
