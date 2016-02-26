@@ -15,7 +15,6 @@ fromFile <- function(input) {
 
   myddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable=myTable, directory=myDir, design=~ condition)
   mydds <- DESeq(myddsHTSeq)
- # myresults <- results(mydds)
 
   return(mydds)
 }
@@ -51,19 +50,24 @@ write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsN
 
 
 # PREPARE COUNT CLUSTERING
-# extract sample labels
-df <- as.data.frame(colData(mydds)[,"condition"])
-rownames(df) <- colnames(mydds)
-colnames(df) <- "condition"
-
+# extract sample labels -> for columns get all factors for each sample
+all_cols <- names(colData(mydds))
+cols <- all_cols[!all_cols %in% c("sampleName", "fileName", "sizeFactor","replaceable")]
+df <- as.data.frame(colData(mydds)[,cols])
+rownames(df) <- rownames(colData(mydds))
+colnames(df) <- cols
 
 # PREPARE INTERSAMPLE DISTANCE CLUSTERING
 sampleDists <- dist(t(transCounts))
 sampleDistMatrix <- as.matrix(sampleDists)
+# to append sample info to sampleName for row labels:
+#   rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), apply( df[ , cols ] , 1 , paste, collapse = "-" ), sep="-")
+
 
 
 # PREPARE PCA
 pca <- plotPCA(trans, intgroup="condition")
+pca_full <- plotPCA(trans, intgroup=cols)
 
 # PLOT
 #1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV
@@ -73,8 +77,13 @@ library(pheatmap)
 
 pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
 print(pca)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row")
-pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7)
+if (length(cols) > 1)
+{
+  print(pca_full)
+}
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", main="Clustered by Euclidean distance")
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", clustering_distance_cols="correlation", main="Clustered by Pearson correlation")
+pheatmap(sampleDistMatrix, annotation_col=df,clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7)
 dev.off()
 
 
