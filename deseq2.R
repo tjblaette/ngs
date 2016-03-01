@@ -69,6 +69,26 @@ sampleDistMatrix <- as.matrix(sampleDists)
 pca <- plotPCA(trans, intgroup="condition")
 pca_full <- plotPCA(trans, intgroup=cols)
 
+
+# PREPARE HEATMAP ANNOTATION COLORS (otherwise they do not match colors from PCA) -> hard-coded "condition" column!
+# function to retrieve colors (evenly spaced on color ring)
+ggplotColours <- function(n=6, h=c(0, 360) +15){
+  if ((diff(h)%%360) < 1) h[2] <- h[2] - 360/n
+    hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
+}
+
+# retrieve colors for required number of groups to differentiate within "condition"
+colors <- ggplotColours(length(unique(df$condition)))
+
+# label colors with corresponding group
+names(colors) <- sort(unique(df$condition))
+
+# create a list to pass to pheatmap command
+anno_colors <- list(condition=colors)
+
+
+
+
 # PLOT
 #1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV
 #2: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV
@@ -81,9 +101,9 @@ if (length(cols) > 1)
 {
   print(pca_full)
 }
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", main="Clustered by Euclidean distance")
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", clustering_distance_cols="correlation", main="Clustered by Pearson correlation")
-pheatmap(sampleDistMatrix, annotation_col=df,clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", main="Clustered by Euclidean distance", annotation_color=anno_colors)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", clustering_distance_cols="correlation", main="Clustered by Pearson correlation", annotation_color=anno_colors)
+pheatmap(sampleDistMatrix, annotation_col=df,clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7, annotation_color=anno_colors)
 dev.off()
 
 
