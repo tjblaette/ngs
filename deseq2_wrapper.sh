@@ -22,7 +22,7 @@ fi
 
 
 # RUN DESEQ2 SCRIPT
-Rscript /NGS/myscripts/deseq2.R $IN $ALPHA $LFC
+Rscript $(dirname $0)/deseq2.R $IN $ALPHA $LFC
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs

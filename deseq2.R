@@ -14,16 +14,18 @@ fromFile <- function(input) {
   myDir <- "intermediate_files"
 
   myddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable=myTable, directory=myDir, design=~ condition)
-  mydds <- DESeq(myddsHTSeq)
+  # set the reference/base level for differential testing to a specific group within a column in the design table: (otherwise the first group in alphabetical order is chosen)
+  # myddsHTSeq$condition <- relevel(myddsHTSeq$condition, "control")
 
+  # should we filter out genes with basically no expression? YES
+  myddsHTSeq <- myddsHTSeq[ rowSums(counts(myddsHTSeq)) > 1, ]
+
+  # differential expression testing  
+  mydds <- DESeq(myddsHTSeq)
   return(mydds)
 }
 
-
 mydds <- fromFile(input_file)
-
-# should we filter out genes with basically no expression? YES
-mydds <- mydds[ rowSums(counts(mydds)) > 1, ]
 
 
 ###########################################################################################
