@@ -46,7 +46,7 @@ cv <- standev/avrg
 select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
 
 # transform counts and apply cv-based selection
-trans <- rlog(mydds)
+trans <- rlog(mydds, blind=FALSE)
 transCounts <- assay(trans)[select,]
 write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
@@ -60,8 +60,13 @@ rownames(df) <- rownames(colData(mydds))
 colnames(df) <- cols
 
 # PREPARE INTERSAMPLE DISTANCE CLUSTERING
+# euclidean distance
 sampleDists <- dist(t(transCounts))
 sampleDistMatrix <- as.matrix(sampleDists)
+
+# pearson correlation distance (taken from pheatmap source code)
+sampleDists_corr <- as.dist(1 - cor(transCounts))
+
 # to append sample info to sampleName for row labels:
 #   rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), apply( df[ , cols ] , 1 , paste, collapse = "-" ), sep="-")
 
@@ -103,9 +108,10 @@ if (length(cols) > 1)
 {
   print(pca_full)
 }
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", main="Clustered by Euclidean distance", annotation_color=anno_colors)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", clustering_distance_cols="correlation", main="Clustered by Pearson correlation", annotation_color=anno_colors)
-pheatmap(sampleDistMatrix, annotation_col=df,clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, fontsize=7, annotation_color=anno_colors)
+# to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Euclidean distance", clustering_distance_cols=sampleDists)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Pearson correlation", clustering_distance_cols=sampleDists_corr)
+pheatmap(sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
 dev.off()
 
 
