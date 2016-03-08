@@ -46,7 +46,7 @@ cv <- standev/avrg
 select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
 
 # transform counts and apply cv-based selection
-trans <- rlog(mydds, blind=FALSE)
+trans <- rlog(mydds)
 transCounts <- assay(trans)[select,]
 write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
@@ -95,11 +95,12 @@ anno_colors <- list(condition=colors)
 
 
 
-
 # PLOT
-#1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV
-#2: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV
-#3: PCA -> based on whole data set
+#1: PCA 
+#2: if more than one column is provided in input_file, a second PCA is printed with additional color codings (but otherwise the same)
+#3: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV, scaled by row
+#4: complete linkage clustering based on Pearson correlation of transformed read counts -> based on top X genes with max CV, scaled by row
+#5: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
 library(pheatmap)
 
 pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
@@ -118,6 +119,40 @@ dev.off()
 ###################################################################################################
 # PROCESS RESULTS OF DGE ANALYSIS 
 myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThreshold=my_lfc)
+
+# plot heatmap with DEGs only
+sig <- which(myresults$padj < my_alpha)
+
+# check if there are significant DEGs to plot
+if(length(sig) > 0)
+{
+  sigCounts <- assay(trans)[sig, ]
+
+  # euclidean distances
+  sig_sampleDists <- dist(t(sigCounts))
+  sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
+
+  # pearson correlation distances (taken from pheatmap source code)
+  sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
+
+
+  # prepare PCA
+  sig_pca <- plotPCA(trans[sig,], intgroup="condition")
+  sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
+
+  # PLOT
+  pdf(paste(input_file,"_DESeq2results_degs.pdf",sep=""))
+  print(sig_pca) 
+  if (length(cols) > 1)
+  {
+    print(sig_pca_full)
+  }
+
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists)
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr)
+  pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists)
+  dev.off()
+}
 
 
 #sort according to adjusted p-value and write results to file
