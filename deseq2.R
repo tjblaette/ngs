@@ -124,7 +124,7 @@ myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThres
 sig <- which(myresults$padj < my_alpha)
 
 # check if there are significant DEGs to plot
-if(length(sig) > 0)
+if(length(sig) > 1)
 {
   sigCounts <- assay(trans)[sig, ]
 
