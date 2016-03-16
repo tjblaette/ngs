@@ -250,11 +250,14 @@ processPICARD = segment {
 }
 
 
-PINDEL = {
+runPINDEL = {
     var nkern : 24 
+    var region : 'chr13:28,577,689-28,675,147'
     output.dir="intermediate_files"
-    exec "echo $input.bam 250 ${input.bam.prefix}.PINDEL > $output.pindel_cfg.txt"
-    exec "${PINDEL}/pindel -f $REF -i $output.pindel_cfg.txt -c ALL -T $nkern -x 5 -r -t -l -k -s -o $output.prefix"
+    exec "$SAMTOOLS view -hb $input.bam $region > $output.bam"
+    exec "$SAMTOOLS index $output.bam && touch $output.index_dummy"
+    exec "echo $output.bam 250 ${output.bam.prefix} > $output.config"
+    exec "${PINDEL}/pindel -f $REF -i $output.config -c ALL -T $nkern -x 5 -r -t -l -k -s -c $region -o $output.prefix"
     exec """${PINDEL}/pindel2vcf
        -r $REF
        -R ucsc.hg19
@@ -263,7 +266,7 @@ PINDEL = {
        -v $output.vcf
        -G"""
     exec "touch $output"
-    exec """sed -e 's/chr//' $output.vcf | awk '{OFS="\t"; if (!/^#/){print \$1,\$2-1,\$2,\$4"/"\$5,"+"}}' > $output.bed"""
+    // exec """sed -e 's/chr//' $output.vcf | awk '{OFS="\t"; if (!/^#/){print \$1,\$2-1,\$2,\$4"/"\$5,"+"}}' > $output.bed"""
     forward output.vcf
 }
 
@@ -332,7 +335,7 @@ runEXOME_PINDEL = segment {
 	processPICARD +
 	realignGATK +
 	indexSAM +
-	PINDEL 
+	runPINDEL 
 }
 
 
