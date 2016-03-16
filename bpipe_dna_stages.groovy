@@ -316,8 +316,7 @@ runEXOME_VARSCAN = segment {
 	alignMEM +
 	processPICARD + 
 	realignGATK +
-        coverBED +
-        mpileupSAMpad
+        [ coverBED,  mpileupSAMpad ]
 }
 
 
