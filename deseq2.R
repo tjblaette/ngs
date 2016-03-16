@@ -181,3 +181,6 @@ dev.off()
 #write deg analysis results to file
 write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
 
+## PRINT SESSION INFO
+sink(paste(input_file,"_sessionInfo.txt",sep=""))
+print(sessionInfo())
