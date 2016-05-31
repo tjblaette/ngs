@@ -8,6 +8,7 @@ NGS="/NGS" //symlink to respective folder
 ANNOVAR="/NGS/links/annovar"
 BEDTOOLS="/NGS/links/bedtools"
 BWA="bwa"
+BWA_LONG="${NGS}/bwa-long/bwa/bwa"
 CUTADAPT="cutadapt"
 GATK="gatk"
 QC="ngsqc"
@@ -84,6 +85,24 @@ alignMEM = {
                                                         SORT_ORDER=coordinate"""
 }
 
+alignMEMlong = {
+    var nkern : 48 
+    output.dir="intermediate_files"
+    exec """$BWA_LONG mem 
+	-M
+        -t $nkern 
+	-R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
+	-x ont2d
+        $REF
+        $input.fastq | sed -e '/^@PG/s/\t/ /5' 
+                		-e '/^@PG/s/\t/ /5' 
+               			-e '/^@PG/s/\t/ /5' 
+                		-e '/^@PG/s/\t/ /5' | $PICARD SortSam
+                                                        INPUT=/dev/stdin
+                                                        OUTPUT=$output.bam
+                                                        CREATE_INDEX=true
+                                                        SORT_ORDER=coordinate"""
+}
 
 sortSAM = {
     output.dir="intermediate_files"
