@@ -31,6 +31,6 @@ done
 echo "Done sorting!"
 
 ## add 5bp padding to each interval in the BED file so that we can safely restrict variant calling to that area
-awk -v OFS='\t' '!/browser|track/ {$2=$2-5; $3=$3+5; print $0} /browser|track/' ${BED%.bed}_sorted.bed > ${BED%.bed}_sorted_padded.bed
+awk -v OFS='\t' '!/browser|track/ {$2=$2-5; $3=$3+5; print $0} /browser|track/' ${BED%.bed}_sorted.bed > ${BED%.bed}_sorted.bed_padded
 
 echo "Done padding!"
