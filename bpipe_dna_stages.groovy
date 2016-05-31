@@ -241,13 +241,15 @@ bqsrGATK = {
 
 mpileupSAMpad = {
     var exon_cover : EXON_TARGET
-    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -B -l ${exon_cover}_padded $input.bam > $output.pileup"""
+    var bqs : 25
+    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l ${exon_cover}_padded $input.bam > $output.pileup"""
 }
 
 //additional stage to use non-padded BED for Amplicons
 mpileupSAMexact = {
     var exon_cover : EXON_TARGET
-    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q 25 -B -l $exon_cover $input.bam > $output.pileup"
+    var bqs : 25
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $exon_cover $input.bam > $output.pileup"
 }
 
 //additional stage without BED and quality filters for VarSim
