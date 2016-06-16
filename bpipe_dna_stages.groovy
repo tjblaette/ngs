@@ -371,11 +371,10 @@ runEXOME_PLATYPUS = segment {
 somVARSC = {
     output.dir="results_varscan"
     exec """$VARSCAN somatic
-        $input1.pileup
         $input2.pileup
-	results_varscan/${input2.prefix}_somVARSC
-	--output-snp results_varscan/${input2.prefix}.somVARSC.snp
-	--output-indel results_varscan/${input2.prefix}.somVARSC.indel
+        $input1.pileup
+        --output-snp $output.snp
+        --output-indel $output.indel
         --min-coverage 1
         --min-var-freq 0.01
         --min-freq-for-hom 0.75
@@ -383,8 +382,8 @@ somVARSC = {
         --tumor-purity 1.0
         --p-value 0.99
         --somatic-p-value 0.05"""
-    forward(glob("results_varscan/*.somVARSC.*"))
 }
+
 
 somVARSCvcf = {
     output.dir="results_varscan"
@@ -443,18 +442,33 @@ sed_rfmt = {
 
 
 processVARSC = {
-    exec "$VARSCAN processSomatic intermediate_files/\$(basename ${input}.pass)"
-    forward(glob("intermediate_files/*.pass.*"))
+    exec "$VARSCAN processSomatic $input"
+    exec "rm -f results_varscan/*.hc"
+    forward(glob("results_varscan/*somVARSC.*.*"))
+}
+
+
+// processSomatic creates output with variant type as file extension -> bpipe would remove these in the subsequent stage's output file names -> to prevent this, I add a dummy file extension with this stage
+dummy = {
+    output.dir="results_varscan"
+    produce("${input}.dummy"){
+    exec "cp $input ${input}.dummy"
+    }
 }
 
 
 doublePos = {
-    exec "sed -e '0,/chr.*\$/{s/chr.*\$/&\\n&/}' $input > intermediate_files/\$(basename ${input}.pre_rwrt)"
-    exec "${NGS}/snp_rwrt/snp_rwrt intermediate_files/\$(basename ${input}.pre_rwrt) intermediate_files/\$(basename ${input}.rwrt)"
-    exec "sed -i -e '1d' intermediate_files/\$(basename ${input}.rwrt)"
+    output.dir="intermediate_files"
+    // delete header and fix indel ref and alt alleles to match annovar input specifications
+    exec """sed -i -e '1d' -e 's/^\\([^\t]*\t[^\t]*\t\\).[^\t]*\t+\\([^\t]*\\)/\\1-\t\\2/' $input"""
+
+    exec """sed -e '0,/chr.*\$/{s/chr.*\$/&\\n&/}' $input > $output.pre_rwrt"""
+    exec "${NGS}/snp_rwrt/snp_rwrt $output.pre_rwrt $output.rwrt"
+    exec """sed -e '1d' $output.rwrt > $output.rwrt_sed"""
+
     // fix del coords:
-    exec """awk -v OFS="\t" 'substr(\$5,1,1) == "-" {\$2=\$2+1; \$3=\$3+length(\$5)-1; \$4=substr(\$5,2,length(\$5)); \$5="-"; print \$0} substr(\$5,1,1) != "-" {print \$0}' intermediate_files/\$(basename ${input}.rwrt)  > intermediate_files/\$(basename ${input}.rwrt.fixed)"""
-    forward """${input}.rwrt.fixed"""
+    exec """awk -v OFS="\t" 'substr(\$5,1,1) == "-" {\$2=\$2+1; \$3=\$3+length(\$5)-1; \$4=substr(\$5,2,length(\$5)); \$5="-"; print \$0} substr(\$5,1,1) != "-" {print \$0}' $output.rwrt_sed > $output.fixed"""
+    forward """$output.fixed"""
 }
 
 
@@ -472,12 +486,10 @@ tableANNOVARmm10 = {
 
 merged = {
     output.dir="results_csv"
-    exec "head -n 1 intermediate_files/*snp*Somatic.hc*.csv > results_csv/${input3.fastq.prefix}_merged.csv"
-    exec "tail -n +2 intermediate_files/*Germline.rwrt*.csv | cat >> results_csv/${input3.fastq.prefix}_merged.csv"
-    exec "tail -n +2 intermediate_files/*LOH.rwrt*.csv | cat >> results_csv/${input3.fastq.prefix}_merged.csv"
-    exec "tail -n +2 intermediate_files/*Somatic.rwrt*.csv | cat >> results_csv/${input3.fastq.prefix}_merged.csv" 
-    exec """sed -i -e '/^\$/d' results_csv/${input3.fastq.prefix}_merged.csv"""
-    exec """sed -i -e '/^==>/d' results_csv/${input3.fastq.prefix}_merged.csv"""
+    exec "head -n 1 intermediate_files/*snp.Somatic.*.csv > results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
+    exec "tail -n +2 intermediate_files/*.csv >> results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
+    exec """sed -i -e '/^\$/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
+    exec """sed -i -e '/^==>/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
     forward(glob("results_csv/*merged.csv"))
 }
 
