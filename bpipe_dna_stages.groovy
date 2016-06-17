@@ -345,8 +345,7 @@ runEXOME_VARSCAN_mouse = segment {
         alignMEM +
         processPICARD +
         realignGATKwoutKnown +
-        coverBED +
-        mpileupSAMpad
+        [ coverBED, mpileupSAMpad ]
 }
 
 
