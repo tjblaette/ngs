@@ -451,7 +451,7 @@ processVARSC = {
 dummy = {
     output.dir="results_varscan"
     produce("${input}.dummy"){
-    exec "cp $input ${input}.dummy"
+    exec "cp $input $output"
     }
 }
 
