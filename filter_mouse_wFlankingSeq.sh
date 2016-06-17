@@ -76,17 +76,17 @@ get_flanking_sequence.sh ${2}_filtered_somatic.csv $4 $5
 
 #split files according to normal_var_freq
 head -n 1 $1 > ${2}_filtered_somatic_true.csv
-sed -n '/^\([^,]*,\)\{14\}"[0-7]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_true.csv
+sed -n '/^\([^,]*,\)\{14\}"[0-7]\(\.[0-9]\+\)\?%",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_true.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_true.csv | cut -f1 -d' ') -1)) of these calls have normal_variant_frequency < 8 and were saved to ${2}_filtered_somatic_true.csv" >> ${2}_filter_statistic.txt
 
 head -n 1 $1 > ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{14\}"[8-9]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{14\}"[1-2][0-9]",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"[8-9]\(\.[0-9]\+\)\?%",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"[1-2][0-9]\(\.[0-9]\+\)\?%",/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_check.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ') -1)) of these calls have 7 < normal_variant_frequency < 30 and were saved to ${2}_filtered_somatic_check.csv" >> ${2}_filter_statistic.txt
 
 head -n 1 $1 > ${2}_filtered_somatic_normalVarFreq30plus.csv
-sed -n '/^\([^,]*,\)\{14\}"[3-9][0-9]"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
-sed -n '/^\([^,]*,\)\{14\}"100"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
+sed -n '/^\([^,]*,\)\{14\}"[3-9][0-9]\(\.[0-9]\+\)\?%"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
+sed -n '/^\([^,]*,\)\{14\}"100%"/p' ${2}_filtered_somatic.csv >> ${2}_filtered_somatic_normalVarFreq30plus.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_normalVarFreq30plus.csv | cut -f1 -d' ') -1)) of these calls have normal_variant_frequency > 29 and were saved to ${2}_filtered_somatic_normalVarFreq30plus.csv" >> ${2}_filter_statistic.txt
 
 
@@ -137,10 +137,10 @@ get_flanking_sequence.sh ${2}_filtered_germline.csv $4 $5
 
 #add filtered germline calls with normal_variant_frequency <= 30 to _filtered_somatic_check.csv
 prev="$(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ')"
-sed -n '/^\([^,]*,\)\{14\}"[0-9]",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{14\}"2/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{14\}"30",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
-sed -n '/^\([^,]*,\)\{14\}"1[0-9]",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"[0-9]\(\.[0-9]\+\)\?%",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"1[0-9]\(\.[0-9]\+\)\?%",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"2[0-9]\(\.[0-9]\+\)\?%/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
+sed -n '/^\([^,]*,\)\{14\}"30%",/p' ${2}_filtered_germline.csv >> ${2}_filtered_somatic_check.csv
 echo "$(( $(wc -l ${2}_filtered_somatic_check.csv | cut -f1 -d' ') - $prev)) filtered germline calls had a normal_variant_frequency up to 30% and were also added to ${2}_filtered_somatic_check.csv" >> ${2}_filter_statistic.txt
 
 
