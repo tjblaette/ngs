@@ -426,8 +426,7 @@ amplicon = segment {
 //        indexPIC + 
 	idxstatPIC +
         realignGATK + 
-        coverBED +
-        mpileupSAMexact +
+        [ coverBED, mpileupSAMexact ] +
         somVARSCunpaired
 }
 
