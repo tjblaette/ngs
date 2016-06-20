@@ -17,6 +17,7 @@ chr="$1"
 pos=$2
 ref=$3
 length=$(($4+1))
+input="$(basename ${5%.csv})"
 #length=$(( 2 * $4 + 1 ))
 
 #make sure pos is not negative - would mean that there is not enough flanking sequence upstream - set to 0 and adjust length to only print what is available
@@ -85,11 +86,11 @@ then
 	end2=$(( ( $width - $end ) * (-1)))
 	end1=$width
 #kann ich hier garantieren, dass die nächste Zeile immer reicht??
-	echo $currentLine | sed "s/^\(.\{${start}\}\)\(.*\)/\2/g" > ${1}_${2}_sed_tmp.txt
-	sed $line2'q;d' $ref | sed "s/^\(.\{${end2}\}\).*/\1/g" >> ${1}_${2}_sed_tmp.txt
+	echo $currentLine | sed "s/^\(.\{${start}\}\)\(.*\)/\2/g" > ${input}_${1}_${2}_sed_tmp.txt
+	sed $line2'q;d' $ref | sed "s/^\(.\{${end2}\}\).*/\1/g" >> ${input}_${1}_${2}_sed_tmp.txt
 	
-	tr -d '\n' < ${1}_${2}_sed_tmp.txt | cat
-	rm -f ${1}_${2}_sed_tmp.txt
+	tr -d '\n' < ${input}_${1}_${2}_sed_tmp.txt | cat
+	rm -f ${input}_${1}_${2}_sed_tmp.txt
 	echo ''
     else
 #echo 'no second line'
@@ -113,7 +114,7 @@ do
 		indel_begin=$(echo $line | sed 's/"//g' | cut -f2 -d',' )
                 left=$(( $indel_begin - $3 )) 
                 right=$(( $indel_begin +  $indel_length )) 
-                echo "${line},\"$(get_flanking $chrom $left $2 $3)\",\"$(get_flanking $chrom $right $2 $3)\"" >> ${1}_tmp
+                echo "${line},\"$(get_flanking $chrom $left $2 $3 $1)\",\"$(get_flanking $chrom $right $2 $3 $1)\"" >> ${1}_tmp
 done
 
 mv ${1}_tmp ${1}
