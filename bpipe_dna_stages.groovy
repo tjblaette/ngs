@@ -408,9 +408,8 @@ somVARSCunpaired = {
     exec """$VARSCAN somatic
         $input1.pileup
         $input1.pileup
-        results_varscan/${input1.prefix}_somVARSC
-        --output-snp results_varscan/${input1.prefix}.somVARSCunpaired.snp
-        --output-indel results_varscan/${input1.prefix}.somVARSCunpaired.indel
+        --output-snp $output.snp
+        --output-indel $output.indel
         --min-coverage 1
         --min-var-freq 0.01
         --min-freq-for-hom 0.75
@@ -418,7 +417,6 @@ somVARSCunpaired = {
         --tumor-purity 1.0
         --p-value 0.99 
         --somatic-p-value 0.05"""
-    forward(glob("results_varscan/*.somVARSCunpaired.*"))
 }  
 
 
@@ -443,7 +441,7 @@ sed_rfmt = {
 processVARSC = {
     exec "$VARSCAN processSomatic $input"
     exec "rm -f results_varscan/*.hc"
-    forward(glob("results_varscan/*somVARSC.*.*"))
+    forward(glob("results_varscan/*somVARSC{unpaired.,.}*.*"))
 }
 
 
@@ -492,14 +490,22 @@ merged = {
     forward(glob("results_csv/*merged.csv"))
 }
 
-
+// could not manage forward with basename -> added subsequent stages to this one
+// -> leave for other pipelines as separate stages to allow different subsequent stages
 mergedAmplicon = {
     output.dir="results_csv"
-    exec "head -n 1 intermediate_files/${input1.fastq.prefix}*snp*Germline.rwrt*.csv > results_csv/${input1.fastq.prefix}_merged.csv"
-    exec "tail -n +2 intermediate_files/${input1.fastq.prefix}*Germline.rwrt*.csv | cat >> results_csv/${input1.fastq.prefix}_merged.csv"
-    exec """sed -i -e '/^\$/d' results_csv/${input1.fastq.prefix}_merged.csv"""
-    exec """sed -i -e '/^==>/d' results_csv/${input1.fastq.prefix}_merged.csv"""
-    forward(glob("results_csv/${input1.fastq.prefix}*merged.csv"))
+    var candidates : CANDIDATES
+    exec "head -n 1 intermediate_files/${input1.fastq.prefix}*snp.Germline.*.csv > results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
+    exec "tail -n +2 intermediate_files/${input1.fastq.prefix}*Germline.*.csv | cat >> results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
+    exec """sed -i -e '/^\$/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
+    exec """sed -i -e '/^==>/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
+
+   // final_sed 
+    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/"Otherinfo=(normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus)/' -e '1s/;/","/g' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
+
+   // filterOutput
+   exec "echo \$(date) running $FILTER"
+   exec "$FILTER results_csv/\$(basename ${input1.fastq.prefix}_merged.csv) results_csv/\$(basename ${input1.fastq.prefix}_merged) $candidates $REF 15"
 }
 
 

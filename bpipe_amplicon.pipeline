@@ -11,13 +11,12 @@ load 'bpipe_amplicon_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-        "*.fastq" *  [ cutadapt ] +
+        "%_R*.fastq" *  [ cutadapt ] +
         "%.fastq" * [ trim ] +
         "%_R*.fastq" * [ amplicon ] +
-        "%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] +
-        "%.pass.%" * [ doublePos ] +
-        "*%.pass.%.rwrt.fixed" * [  tableANNOVAR ] +
-        "%_R*.fastq" * [ mergedAmplicon ] +
-        "%R1%merged.csv" * [ final_sed + filterOutput ]
+        "%somVARSCunpaired.%" * [ processVARSC ] +
+        "%somVARSCunpaired.%.%" * [ dummy + doublePos ] +
+        "*%.fixed" * [  tableANNOVAR ] +
+        "%_R*.fastq" * [ mergedAmplicon ]
 }
 
