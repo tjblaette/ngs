@@ -454,14 +454,16 @@ doublePos = {
 
 
 tableANNOVAR = {
+    produce("${input}.hg19_multianno.csv"){
     exec """${ANNOVAR}/table_annovar.pl $input ${ANNOVAR}/humandb/ -buildver hg19 -out $input -remove -protocol refGene,genomicSuperDups,esp6500_all,1000g2014sep_all,snp138,cosmic70,ljb23_pp2hdiv,ljb23_sift -operation g,r,f,f,f,f,f,f -nastring '"."' -csvout -otherinfo"""
-    forward(glob("intermediate_files/*.csv"))
+    }
 }
 
 
 tableANNOVARmm10 = {
+    produce("${input}.mm10_multianno.csv"){
     exec """${ANNOVAR}/table_annovar.pl $input ${ANNOVAR}/mm10db/ -buildver mm10 -out $input -remove -protocol refGene,genomicSuperDups,snp138 -operation g,r,f -nastring '"."' -csvout -otherinfo"""
-    forward(glob("intermediate_files/*.csv"))
+    }
 }
 
 
