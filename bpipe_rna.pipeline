@@ -11,13 +11,7 @@ load 'bpipe_rna_config.groovy'
 
 Bpipe.run {
 	getVersions + 
-//        "%_R*.fastq" * [ callVariants_RNA ] +
-//	"%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] +
-//        "%.pass.%" * [ doublePos ] +
-//        "%.pass.%.rwrt" * [  tableANNOVAR ] +
-//	"%_R*.fastq" * [ mergedAmplicon ] +
-//        "%R1%merged.csv" * [ final_sed ]
-//      "%_R*.fastq" * [ alignSTAR + countHTSeq ]
+//      "%_R*.fastq" * [ callVariants_RNA ] + "%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] + "%.pass.%" * [ doublePos ] + "%.pass.%.rwrt" * [  tableANNOVAR ] +
 	"%_R*.fastq" * [ alignSTAR + indexPIC ]
 }
 

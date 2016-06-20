@@ -258,14 +258,12 @@ mpileupSAM = {
 }
 
 processSAM = segment {
-//	sortSAM + indexSAM + 
 	idxstatSAM +
         dedupSAM + indexSAM + idxstatSAM
 }
 
 
 processPICARD = segment {
-//	sortPIC + 
 	idxstatPIC +
         dedupPIC + idxstatPIC
 }
@@ -287,7 +285,6 @@ runPINDEL = {
        -v $output.vcf
        -G"""
     exec "touch $output"
-    // exec """sed -e 's/chr//' $output.vcf | awk '{OFS="\t"; if (!/^#/){print \$1,\$2-1,\$2,\$4"/"\$5,"+"}}' > $output.bed"""
     forward output.vcf
 }
 
@@ -419,30 +416,19 @@ somVARSCunpaired = {
         --somatic-p-value 0.05"""
 }  
 
-
 amplicon = segment {
         alignMEM +
-//        sortPIC +
-//        indexPIC + 
 	idxstatPIC +
         realignGATK + 
         [ coverBED, mpileupSAMexact ] +
         somVARSCunpaired
 }
 
-
-sed_rfmt = {
-    exec "${NGS}/snp_filter/snp_filter $input intermediate_files/\$(basename ${input}.pass) intermediate_files/\$(basename ${input}.dumped) 0 0 0 0 0 0"
-    forward(glob("intermediate_files/\$(basename ${input}.pass)"))
-}
-
-
 processVARSC = {
     exec "$VARSCAN processSomatic $input"
     exec "rm -f results_varscan/*.hc"
     forward(glob("results_varscan/*somVARSC{unpaired.,.}*.*"))
 }
-
 
 // processSomatic creates output with variant type as file extension -> bpipe would remove these in the subsequent stage's output file names -> to prevent this, I add a dummy file extension with this stage
 dummy = {
@@ -451,7 +437,6 @@ dummy = {
     exec "cp $input $output"
     }
 }
-
 
 doublePos = {
     output.dir="intermediate_files"
@@ -509,12 +494,6 @@ mergedAmplicon = {
 
 
 final_sed = {
-//    exec "cut -f1-5 -d',' $input > intermediate_files/\$(basename ${input}_not_otherinfo1.txt)"
-//    exec """cut -f6- -d',' $input | sed -e '2,\$ s/","/"___re___"/g' -e 's/""/"/g' -e '2,\$ s/,/;/g' -e 's/___re___/,/g'  > intermediate_files/\$(basename ${input}_not_otherinfo2.txt)"""
-//    exec "cut -f1-12 -d',' intermediate_files/\$(basename ${input}_not_otherinfo2.txt) > intermediate_files/\$(basename ${input}_not_otherinfo3.txt)"
-//    exec """cut -f13- -d',' intermediate_files/\$(basename ${input}_not_otherinfo2.txt) | sed -e 's/^"//g' > intermediate_files/\$(basename ${input}_otherinfo.txt)"""
-//    exec "paste intermediate_files/\$(basename ${input}_not_otherinfo1.txt) intermediate_files/\$(basename ${input}_not_otherinfo3.txt) intermediate_files/\$(basename ${input}_otherinfo.txt) > $input"
-//    exec """sed  -i -e 's/	/,/g' -e 's/,"\$//g' -e 's/Otherinfo/Otherinfo=(normal_reads1,normal_reads2,normal_var_freq,normal_gt,tumor_reads1,tumor_reads2,tumor_var_freq,tumor_gt,somatic_status,variant_p_value,somatic_p_value,tumor_reads1_plus,tumor_reads1_minus,tumor_reads2_plus,tumor_reads2_minus,normal_reads1_plus,normal_reads1_minus,normal_reads2_plus,normal_reads2_minus)?/' $input"""
     exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/"Otherinfo=(normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus)/' -e '1s/;/","/g' $input"""
 }
 
