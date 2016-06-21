@@ -1,12 +1,11 @@
-//file containing Bpipe call for WES pipeline
+//file containing Bpipe call for nanopore pipeline
 
 
 // LOAD STAGES
 load 'bpipe_dna_stages.groovy'
 
 // LOAD CONFIG
-load 'bpipe_exome_config.groovy'
-REF="${NGS}/refgenome/lambda/lambda_ont.fasta" 
+load 'bpipe_rna_config.groovy'
 
 Bpipe.run {
 	getVersions + 
