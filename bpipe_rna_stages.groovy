@@ -5,6 +5,16 @@
 STAR="star"
 STAR_LONG="/NGS/star_long/source/STARlong"
 
+
+qc = {
+    var nkern : 24
+    // subsample FASTQ files for QC -> take every 25th read only -> (NR = read fraction ^-1 * 4 = 25 * 4 = 100)
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input1.fastq > $output1.subsample"
+    exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input2.fastq > $output2.subsample"
+    exec "$QC -pe $output1.subsample $output2.subsample N A -c $nkern -onlyStat -o FASTQ_QC && touch $output.success"
+}
+
+
 alignSTAR = {
         var nkern : 48 
         output.dir="intermediate_files"
