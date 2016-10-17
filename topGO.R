@@ -1,8 +1,8 @@
 
 args <- commandArgs(TRUE)
-IN <- args[1]
-OUT <- args[2]
-ORGANISM <- args[3]
+IN <- args[1] # DESeq2results_annotated_woutNA.txt
+OUT <- args[2] # output file prefix
+ORGANISM <- args[3] # Hs for human 
 
 # IN <- "/media/LBseq/tamara/countCircs/forDESeq2.tsv_DESeq2results.txt"
 if(!exists("ORGANISM"))

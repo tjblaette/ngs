@@ -26,7 +26,8 @@ fromFile <- function(input) {
 }
 
 mydds <- fromFile(input_file)
-
+save(mydds, file=paste(input_file,"_DESeq2results.RData", sep=""))
+#load(paste(input_file,"_DESeq2results.RData", sep=""))
 
 ###########################################################################################
 ###########################################################################################
@@ -36,40 +37,30 @@ mydds <- fromFile(input_file)
 counts <- counts(mydds,normalized=TRUE)
 write.table(counts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalized.txt", sep=""))
 
+# get transformed read counts
+trans <- vst(mydds)
+save(trans, file=paste(input_file,"_DESeq2results_trans.RData", sep=""))
+#load(file=paste(input_file,"_DESeq2results_trans.RData", sep=""))
+write.table(assay(trans), sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
+
 
 # calculate coefficient of variation
 standev <- apply(counts,1,sd)
 avrg <- apply(counts,1,mean)
 cv <- standev/avrg
 
-# select genes with highest cv
-select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
-
-# transform counts and apply cv-based selection
-trans <- rlog(mydds)
-transCounts <- assay(trans)[select,]
-write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
 
-# PREPARE COUNT CLUSTERING
+# PREPARE PLOTTING
+library(pheatmap)
+pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""), height=10)
+
 # extract sample labels -> for columns get all factors for each sample
 all_cols <- names(colData(mydds))
 cols <- all_cols[!all_cols %in% c("sampleName", "fileName", "sizeFactor","replaceable")]
 df <- as.data.frame(colData(mydds)[,cols])
 rownames(df) <- rownames(colData(mydds))
 colnames(df) <- cols
-
-# PREPARE INTERSAMPLE DISTANCE CLUSTERING
-# euclidean distance
-sampleDists <- dist(t(transCounts))
-sampleDistMatrix <- as.matrix(sampleDists)
-
-# pearson correlation distance (taken from pheatmap source code)
-sampleDists_corr <- as.dist(1 - cor(transCounts))
-
-# to append sample info to sampleName for row labels:
-#   rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), apply( df[ , cols ] , 1 , paste, collapse = "-" ), sep="-")
-
 
 
 # PREPARE PCA
@@ -86,33 +77,60 @@ ggplotColours <- function(n=6, h=c(0, 360) +15){
 
 # retrieve colors for required number of groups to differentiate within "condition"
 colors <- ggplotColours(length(unique(df$condition)))
+color_genes <- c("forestgreen","red3")
+names(color_genes) <- c("WT","mut")
+color_CKs <- color_genes
+names(color_CKs) <- c("nCK","CK")
 
 # label colors with corresponding group
 names(colors) <- sort(unique(df$condition))
 
 # create a list to pass to pheatmap command
 anno_colors <- list(condition=colors)
+anno_colors <- list(condition=colors,ASXL1=color_genes,BCOR=color_genes,EZH2=color_genes,MLLptd=color_genes,RUNX1=color_genes,SF3B1=color_genes, STAG2=color_genes,U2AF1=color_genes,TP53=color_genes, CK=color_CKs)
 
-
-
-# PLOT
-#1: PCA 
-#2: if more than one column is provided in input_file, a second PCA is printed with additional color codings (but otherwise the same)
-#3: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV, scaled by row
-#4: complete linkage clustering based on Pearson correlation of transformed read counts -> based on top X genes with max CV, scaled by row
-#5: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
-library(pheatmap)
-
-pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
+# plot PCA -> if there is more than one annotation column, print a second PCA with all of that information
 print(pca)
 if (length(cols) > 1)
 {
   print(pca_full)
 }
-# to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Euclidean distance", clustering_distance_cols=sampleDists)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Pearson correlation", clustering_distance_cols=sampleDists_corr)
-pheatmap(sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
+
+
+
+for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
+{
+ # select genes with highest cv
+ select <- order(cv, decreasing=TRUE)[1:min(length(cv),maxGenes)]
+
+ # transform counts and apply cv-based selection
+ transCounts <- assay(trans)[select,]
+ ##write.table(transCounts, sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed_maxGenes_",maxGenes,".txt", sep=""))
+
+
+ # PREPARE INTERSAMPLE DISTANCE CLUSTERING
+ # euclidean distance
+ sampleDists <- dist(t(transCounts))
+ sampleDistMatrix <- as.matrix(sampleDists)
+
+ # pearson correlation distance (taken from pheatmap source code)
+ sampleDists_corr <- as.dist(1 - cor(transCounts))
+
+ # to append sample info to sampleName for row labels:
+ #   rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), apply( df[ , cols ] , 1 , paste, collapse = "-" ), sep="-")
+
+
+
+ #1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV, scaled by row
+ #2: complete linkage clustering based on Pearson correlation of transformed read counts -> based on top X genes with max CV, scaled by row
+ #3: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
+ # to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
+ pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Euclidean distance - ",maxGenes,sep=""), clustering_distance_cols=sampleDists)
+ #pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Pearson correlation - ",maxGenes,sep=""), clustering_distance_cols=sampleDists_corr)
+ pheatmap(sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
+
+} # end plotting
+
 dev.off()
 
 
@@ -127,6 +145,10 @@ sig <- which(myresults$padj < my_alpha)
 if(length(sig) > 1)
 {
   sigCounts <- assay(trans)[sig, ]
+print("should write degs counts") 
+print(paste(input_file,"_DESeq2results_CountsNormalized_degs.txt", sep=""))
+  write.table(sigCounts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalized_degs.txt", sep=""))
+
 
   # euclidean distances
   sig_sampleDists <- dist(t(sigCounts))
@@ -141,16 +163,16 @@ if(length(sig) > 1)
   sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
 
   # PLOT
-  pdf(paste(input_file,"_DESeq2results_degs.pdf",sep=""))
+  pdf(paste(input_file,"_DESeq2results_degs.pdf",sep=""), height=10)
   print(sig_pca) 
   if (length(cols) > 1)
   {
     print(sig_pca_full)
   }
 
-  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists)
-  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr)
-  pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists)
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists)
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr)
+  pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists)
   dev.off()
 }
 
@@ -167,9 +189,6 @@ sink()
 ####################################################################################################
 # ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
 
-#to convert ENSEMBL gene ids to gene symbols, I have to remove the decimal
-rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
-
 #plot normalized gene counts to pdf
 pdf(paste(input_file,"_DESeq2results_geneCountPlots.pdf",sep=""))
 for (i in 1:(dim(mydds)[1]))
@@ -178,9 +197,14 @@ for (i in 1:(dim(mydds)[1]))
   }
 dev.off()
 
-#write deg analysis results to file
-write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
-
 ## PRINT SESSION INFO
 sink(paste(input_file,"_sessionInfo.txt",sep=""))
 print(sessionInfo())
+sink()
+
+#to convert ENSEMBL gene ids to gene symbols later, I have to remove the decimal now
+rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
+
+#write deg analysis results to file -> overwrite if decimal removal was successful (will fail for Susi's circRNAs) and keep existing version otherwise
+write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
+

@@ -11,7 +11,7 @@ IN=$1
 ALPHA=${2:-0.1}
 BIOMART=${3:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
 ENTREZ=${4:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
-LFC=${5:-0} # does not take any effect!
+LFC=${5:-0.6} # does not take any effect!
 
 # check if the gene ID to Symbol conversion table exists already
 # if it does not, create it now
