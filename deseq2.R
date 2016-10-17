@@ -38,7 +38,7 @@ counts <- counts(mydds,normalized=TRUE)
 write.table(counts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalized.txt", sep=""))
 
 # get transformed read counts
-trans <- vst(mydds)
+trans <- rlog(mydds)
 save(trans, file=paste(input_file,"_DESeq2results_trans.RData", sep=""))
 #load(file=paste(input_file,"_DESeq2results_trans.RData", sep=""))
 write.table(assay(trans), sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
@@ -126,7 +126,7 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
  #3: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
  # to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
  pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Euclidean distance - ",maxGenes,sep=""), clustering_distance_cols=sampleDists)
- #pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Pearson correlation - ",maxGenes,sep=""), clustering_distance_cols=sampleDists_corr)
+ pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Pearson correlation - ",maxGenes,sep=""), clustering_distance_cols=sampleDists_corr)
  pheatmap(sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
 
 } # end plotting
