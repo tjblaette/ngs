@@ -26,7 +26,8 @@ fromFile <- function(input) {
 }
 
 mydds <- fromFile(input_file)
-
+save(mydds, file=paste(input_file,"_DESeq2results.RData", sep=""))
+#load(paste(input_file,"_DESeq2results.RData", sep=""))
 
 ###########################################################################################
 ###########################################################################################
@@ -47,6 +48,8 @@ select <- order(cv, decreasing=TRUE)[1:min(length(cv),30000)]
 
 # transform counts and apply cv-based selection
 trans <- rlog(mydds)
+save(trans, file=paste(input_file,"_DESeq2results_transformed.RData", sep=""))
+#load(paste(input_file,"_DESeq2results_transformed.RData", sep=""))
 transCounts <- assay(trans)[select,]
 write.table(assay(trans), sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
@@ -86,12 +89,15 @@ ggplotColours <- function(n=6, h=c(0, 360) +15){
 
 # retrieve colors for required number of groups to differentiate within "condition"
 colors <- ggplotColours(length(unique(df$condition)))
+color_genes <- c("forestgreen","red3")
+names(color_genes) <- c("WT","mut")
 
 # label colors with corresponding group
 names(colors) <- sort(unique(df$condition))
 
 # create a list to pass to pheatmap command
 anno_colors <- list(condition=colors)
+anno_colors <- list(condition=colors,ASXL1=color_genes,BCOR=color_genes,EZH2=color_genes,MLLptd=color_genes,RUNX1=color_genes,SF3B1=color_genes, STAG2=color_genes,U2AF1=color_genes,TP53=color_genes, CK=color_CKs)
 
 
 
@@ -103,16 +109,16 @@ anno_colors <- list(condition=colors)
 #5: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
 library(pheatmap)
 
-pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""))
+pdf(paste(input_file,"_DESeq2results_exploratory.pdf",sep=""), height=10)
 print(pca)
 if (length(cols) > 1)
 {
   print(pca_full)
 }
 # to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Euclidean distance", clustering_distance_cols=sampleDists)
-pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="Clustered by Pearson correlation", clustering_distance_cols=sampleDists_corr)
-pheatmap(sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="Clustered by Euclidean distance", clustering_distance_cols=sampleDists)
+pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="Clustered by Pearson correlation", clustering_distance_cols=sampleDists_corr)
+pheatmap(sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists)
 dev.off()
 
 
@@ -127,6 +133,8 @@ sig <- which(myresults$padj < my_alpha)
 if(length(sig) > 1)
 {
   sigCounts <- assay(trans)[sig, ]
+  write.table(sigCounts, sep="\t",file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed_degs.txt", sep=""))
+
 
   # euclidean distances
   sig_sampleDists <- dist(t(sigCounts))
@@ -141,16 +149,16 @@ if(length(sig) > 1)
   sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
 
   # PLOT
-  pdf(paste(input_file,"_DESeq2results_degs.pdf",sep=""))
+  pdf(paste(input_file,"_DESeq2results_degs.pdf",sep=""), height=10)
   print(sig_pca) 
   if (length(cols) > 1)
   {
     print(sig_pca_full)
   }
 
-  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists)
-  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=7, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr)
-  pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=7, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists)
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists)
+  pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr)
+  pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists)
   dev.off()
 }
 
@@ -167,9 +175,6 @@ sink()
 ####################################################################################################
 # ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
 
-#to convert ENSEMBL gene ids to gene symbols, I have to remove the decimal
-rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
-
 #plot normalized gene counts to pdf
 pdf(paste(input_file,"_DESeq2results_geneCountPlots.pdf",sep=""))
 for (i in 1:(dim(mydds)[1]))
@@ -178,9 +183,14 @@ for (i in 1:(dim(mydds)[1]))
   }
 dev.off()
 
-#write deg analysis results to file
-write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
-
 ## PRINT SESSION INFO
 sink(paste(input_file,"_sessionInfo.txt",sep=""))
 print(sessionInfo())
+sink()
+
+#to convert ENSEMBL gene ids to gene symbols later, I have to remove the decimal now
+rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
+
+#write deg analysis results to file -> overwrite if decimal removal was successful (will fail for Susi's circRNAs) and keep existing version otherwise
+write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep=""),sep="\t")
+
