@@ -252,8 +252,13 @@ mpileupSAMexact = {
     exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $exon_cover $input.bam > $output.pileup"
 }
 
+//additional stage without BED for variant calling from RNA-seq
+mpileupSAM_noBed = {
+    exec "$SAMTOOLS mpileup -f $REF -q 1 Q $bqs -B $input.bam > $output.pileup"
+}
+
 //additional stage without BED and quality filters for VarSim
-mpileupSAM = {
+mpileupSAM_varsim = {
     exec "$SAMTOOLS mpileup -f $REF $input.bam > $output.pileup"
 }
 

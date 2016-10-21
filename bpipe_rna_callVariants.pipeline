@@ -1,0 +1,21 @@
+//file containing Bpipe call for variant calling on RNA-seq (unpaired)
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+load 'bpipe_rna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_rna_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+	"%_R*.fastq" * [ qc ] +
+        "%_R*.fastq" * [ callVariants_RNA ] + 
+        "*.somVARSCunpaired.%" * [ processVARSC ] +
+        "*.somVARSCunpaired.%.%" * [ dummy + doublePos ] +
+        "%.fixed" * [  tableANNOVAR ]  + merged +
+        "*R1%merged.csv" * [ final_sed + filterOutput ]
+}
+
