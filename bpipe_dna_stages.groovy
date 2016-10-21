@@ -254,7 +254,7 @@ mpileupSAMexact = {
 
 //additional stage without BED for variant calling from RNA-seq
 mpileupSAM_noBed = {
-    exec "$SAMTOOLS mpileup -f $REF -q 1 Q $bqs -B $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B $input.bam > $output.pileup"
 }
 
 //additional stage without BED and quality filters for VarSim

@@ -6,7 +6,7 @@ load 'bpipe_dna_stages.groovy'
 load 'bpipe_rna_stages.groovy'
 
 // LOAD CONFIG
-load 'bpipe_rna_config.groovy'
+load 'bpipe_rna_callVariants_config.groovy'
 
 
 Bpipe.run {
