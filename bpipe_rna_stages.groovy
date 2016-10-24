@@ -99,6 +99,7 @@ countHTSeq = {
 
 callVariants_RNA = segment {
         alignSTAR +
+	indexPIC +
         dedupPIC +
         splitNtrimGATK + 
         realignGATK +
