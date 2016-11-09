@@ -17,6 +17,7 @@ PINDEL="/NGS/links/pindel"
 PLATYPUS="platypus"
 SAMTOOLS="samtools"
 VARSCAN="varscan"
+NGSBITS="/NGS/links/ngs-bits"
 
 getVersions = {
     exec "ls -l ${NGS}/links"
@@ -37,6 +38,11 @@ trim = {
     exec """sed '2~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' $input | sed '4~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' > $output.fastq"""
 }
 
+trim_haloplexC = {
+    exec "${NGSBITS}/FastqTrim -in $input1.fastq -out $output1.fastq -end 1"
+    exec "${NGSBITS}/FastqTrim -in $input2.fastq -out $output2.fastq -start 1"
+    exec "cut -f1 -d ' ' $input3.fastq > $output3.fastq"
+}
 
 cutadapt = {
     exec "$CUTADAPT -m 50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -o $output1.fastq -p $output2.fastq   $input1.fastq   $input2.fastq"
@@ -83,6 +89,8 @@ alignMEM = {
                                                         OUTPUT=$output.bam
                                                         CREATE_INDEX=true
                                                         SORT_ORDER=coordinate"""
+    exec "cd $output.dir; ln -fs \$(basename ${input.prefix}.alignMEM.bai) \$(basename $output.bam.bai); cd $OLDPWD;"
+    forward(output.bam, input3.fastq)
 }
 
 alignMEMlong = {
@@ -133,7 +141,7 @@ sortPIC = {
     output.dir="intermediate_files"
     exec """  
 	$PICARD SortSam
-        INPUT=$input.sam
+        INPUT=$input.bam
         OUTPUT=$output.bam
 	CREATE_INDEX=true
         SORT_ORDER=coordinate"""
@@ -162,6 +170,12 @@ dedupPIC = {
 	REMOVE_DUPLICATES=true
 	CREATE_INDEX=true
 	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
+}
+
+dedupBarcode = {
+    output.dir="intermediate_files"
+    var exon_cover : EXON_TARGET
+    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover"
 }
 
 coverBED = {
@@ -423,6 +437,17 @@ somVARSCunpaired = {
 
 amplicon = segment {
         alignMEM +
+	idxstatPIC +
+        realignGATK + 
+        [ coverBED, mpileupSAMexact ] +
+        somVARSCunpaired
+}
+
+haloplex = segment {
+	trim_haloplexC +
+        alignMEM +
+	dedupBarcode +
+	sortPIC +
 	idxstatPIC +
         realignGATK + 
         [ coverBED, mpileupSAMexact ] +

@@ -1,0 +1,20 @@
+//file containing Bpipe call for HALOPLEX HS pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna_stages.groovy'
+
+// LOAD CONFIG
+load 'bpipe_amplicon_config.groovy'
+
+
+Bpipe.run {
+	getVersions + 
+	"%_R*.fastq" * [ qc ] +
+        "%_R*.fastq" * [ haloplex ] + 
+        "%somVARSCunpaired.%" * [ processVARSC ] +
+        "%somVARSCunpaired.%.%" * [ dummy + doublePos ] +
+        "*%.fixed" * [  tableANNOVAR ] +
+        "%_R*.fastq" * [ mergedAmplicon ]
+}
+
