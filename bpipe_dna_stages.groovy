@@ -89,8 +89,11 @@ alignMEM = {
                                                         OUTPUT=$output.bam
                                                         CREATE_INDEX=true
                                                         SORT_ORDER=coordinate"""
-    exec "cd $output.dir; ln -fs \$(basename ${input.prefix}.alignMEM.bai) \$(basename $output.bam.bai); cd $OLDPWD;"
-    forward(output.bam, input3.fastq)
+    // forward index file for haloplexHS pipeline 
+    if(input.size() % 3 == 0)
+    {    
+	forward(output.bam, input3.fastq)
+    }
 }
 
 alignMEMlong = {
