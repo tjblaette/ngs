@@ -89,12 +89,30 @@ alignMEM = {
                                                         OUTPUT=$output.bam
                                                         CREATE_INDEX=true
                                                         SORT_ORDER=coordinate"""
-    // forward index file for haloplexHS pipeline 
-    if(input.size() % 3 == 0)
-    {    
-	forward(output.bam, input3.fastq)
-    }
 }
+
+// forward 3rd fastq = index file -> that is the only diff to alignMEM above!
+alignMEMhaloplex = {
+    //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
+    var nkern : 24
+    output.dir="intermediate_files"
+    exec """$BWA mem 
+        -M
+        -t $nkern 
+        -R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
+        $REF
+        $input1.fastq
+        $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' 
+                                -e '/^@PG/s/\t/ /5' | $PICARD SortSam
+                                                        INPUT=/dev/stdin
+                                                        OUTPUT=$output.bam
+                                                        CREATE_INDEX=true
+                                                        SORT_ORDER=coordinate"""
+      forward(output.bam, input3.fastq)
+}
+
 
 alignMEMlong = {
     var nkern : 48 
@@ -448,7 +466,7 @@ amplicon = segment {
 
 haloplex = segment {
 	trim_haloplexC +
-        alignMEM +
+        alignMEMhaloplex +
 	dedupBarcode +
 	sortPIC +
 	idxstatPIC +
