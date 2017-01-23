@@ -17,15 +17,29 @@ genes <- unique(map$gene)
 gene_def <- matrix(0,ncol=4,nrow=length(genes))
 colnames(gene_def) <- c("gene","chr","start","end")
 
+omit <- c()
 
 for(gene_ind in 1:length(genes))
 {
   this_gene <- as.character(genes)[gene_ind]
   gene_def[gene_ind,1] <- this_gene
-  gene_def[gene_ind,2] <- as.character(unique(map[map$gene == this_gene, 1]))
-  gene_def[gene_ind,3] <- as.numeric(min(map[map$gene == this_gene,c(2,3)])) - 5
-  gene_def[gene_ind,4] <- as.numeric(max(map[map$gene == this_gene,c(2,3)])) + 5
+
+  this_gene_chr <- unique(map[map$gene == this_gene, 1])
+  if(length(this_gene_chr) == 1) 
+  {
+    gene_def[gene_ind,2] <- as.character(unique(map[map$gene == this_gene, 1]))
+    gene_def[gene_ind,3] <- as.numeric(min(map[map$gene == this_gene,c(2,3)])) #- 5
+    gene_def[gene_ind,4] <- as.numeric(max(map[map$gene == this_gene,c(2,3)])) #+ 5
+
+  } else {
+    omit <- c(omit, this_gene)
+    cat("Gene ", this_gene, " is located on multiple chromosomes and was therefore omitted", "\n")
+    }
 }
+
+#remove genes that had to be omitted
+gene_def <- gene_def[!gene_def[,1] %in% omit,]
+genes <- genes[!genes %in% omit]
 
 gene_def <- as.data.frame(gene_def)
 gene_def$chr <- as.character(gene_def$chr)
@@ -43,29 +57,30 @@ input <- args[file_index]
 
 #sample <- read.delim("example.txt", header=FALSE)
 sample <- read.delim(input, header=FALSE)
-colnames(sample) <- c("chr","start","end","amplicon","score","strand","cov","bases","lengthTotal","fraction")
+# label columns depending on BED format/number of columns
+if(dim(sample)[2] == 10) 
+{
+  colnames(sample) <- c("chr","start","end","amplicon","score","strand","cov","bases","lengthTotal","fraction")
+} else {
+  colnames(sample) <- c("chr","start","end","amplicon","cov","bases","lengthTotal","fraction")
+  }
 sample <- sample[sample$chr != "all",]
-
 
 sum <- 0
 
 averageCov <- c()
 dd <- c();
-
 for(i in 1:(dim(gene_def)[1]))
 {
   d <- sample[sample$chr == gene_def$chr[i] & gene_def$start[i] <= sample$start & gene_def$end[i] >= sample$end,]
   sum <- sum + dim(d)[1]
   
   totalBases <- sum(d$cov * d$bases)
-  totalLength <- sum(unique(d[,c(4,9)])[2]) 
-
+  totalLength <- sum(unique(d[,c("amplicon","lengthTotal")])[2]) 
   averageCov <- c(averageCov, totalBases/totalLength)
 }   
 
-test <- sum == dim(sample)[1]
 
-if(test)
 {
   res <- data.frame(genes=genes,averageCoverage=averageCov)
   #write.table(res,file=paste("averageCoverage_",input,sep=""), sep='\t', row.names=FALSE)
