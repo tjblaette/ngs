@@ -36,7 +36,7 @@ do
   head -n 1 "$COUNTS" | sed -e 's/"//g' >> $NEW_FILE
   
   # add annotated gene counts
-  join -t '	' "${BIOMART%.gtf}_geneIDtoSymbol.txt" <(sort -k1,1b "$COUNTS" | sed -e 's/"//g') >> $NEW_FILE
+  join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") <(sort -k1,1b "$COUNTS" | sed -e 's/"//g' -e 's/\.[0-9]*//') >> $NEW_FILE
 done
 
 
