@@ -26,7 +26,7 @@ Rscript $(dirname $0)/deseq2.R $IN $ALPHA $LFC
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
-for COUNTS in "${IN}_DESeq2results_CountsNormalized.txt" "${IN}_DESeq2results_CountsNormalizedTransformed.txt"
+for COUNTS in "${IN}_DESeq2results_CountsNormalized.txt" "${IN}_DESeq2results_CountsNormalizedTransformed.txt" "${IN}_DESeq2results_CountsNormalizedTransformed_degs.txt"
 do
   # define output file name for annotated file
   NEW_FILE=$(echo $COUNTS | sed 's/CountsNormalized/countsNormalized/')

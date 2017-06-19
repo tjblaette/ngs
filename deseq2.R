@@ -1,13 +1,10 @@
 args <- commandArgs(TRUE)
 print(args)
 input_file <- args[1]
-my_alpha <- args[2]
-my_lfc <- args[3]
+my_alpha <- as.numeric(args[2])
+my_lfc <- as.numeric(args[3])
 
 library("DESeq2")
-
-# DOES NOT WORK WITH ARGUMENT PASSED!
-my_lfc <- 0.6
 
 fromFile <- function(input) {
   myTable <- read.table(input, header=TRUE)
@@ -145,9 +142,7 @@ sig <- which(myresults$padj < my_alpha)
 if(length(sig) > 1)
 {
   sigCounts <- assay(trans)[sig, ]
-print("should write degs counts") 
-print(paste(input_file,"_DESeq2results_CountsNormalized_degs.txt", sep=""))
-  write.table(sigCounts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalized_degs.txt", sep=""))
+  write.table(sigCounts, sep="\t", file=paste(input_file,"_DESeq2results_CountsNormalizedTransformed_degs.txt", sep=""))
 
 
   # euclidean distances
@@ -183,7 +178,7 @@ write.table(myresultsOrdered, file=paste(input_file,"_DESeq2results.txt",sep="")
 
 #print summary of deg analysis
 sink(paste(input_file,"_DESeq2results_summary.txt",sep=""))
-summary(myresultsOrdered, alpha=my_alpha)
+summary(myresults)
 sink()
 
 ####################################################################################################
