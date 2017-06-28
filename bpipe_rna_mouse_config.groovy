@@ -10,5 +10,5 @@ REFDIR="${NGS}/refgenome/mm10/starIndexFixedGTF/" //ref indexed by STAR with ann
 GTF="${NGS}/known_sites/mm10/gencode.vM7.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf"
 
 // TARGET SEQUENCES FOR COVERAGE CALC
-MOUSE="${NGS}/refgenome/mm10/mouse_wes_padded_mm9lifted2mm10_galaxy_sorted.bed"
+MOUSE="${NGS}/known_sites/mm10/mouse_wes_padded_mm9lifted2mm10_galaxy_sorted.bed"
 EXON_TARGET=MOUSE

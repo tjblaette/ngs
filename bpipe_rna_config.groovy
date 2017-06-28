@@ -13,8 +13,8 @@ PHASE1_1000G_INDELS="${NGS}/known_sites/hg19/1000G_phase1.indels.hg19.sites.vcf"
 GTF="${NGS}/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs_noAltHaps.gtf"
 
 // TARGET SEQUENCES FOR COVERAGE CALC
-TRUSEQ="${NGS}/refgenome/hg19/TruSeq-Exome-Targeted-Regions-BED-file.bed" 
-NEXTERA="${NGS}/refgenome/hg19/nexterarapidcapture_exome_targetedregions_v1.2.bed"
-NEXTERA_EXPANDED="${NGS}/refgenome/hg19/nexterarapidcapture_expandedexome_targetedregions.bed"
+TRUSEQ="${NGS}/known_sites/hg19/TruSeq-Exome-Targeted-Regions-BED-file.bed" 
+NEXTERA="${NGS}/known_sites/hg19/nexterarapidcapture_exome_targetedregions_v1.2.bed"
+NEXTERA_EXPANDED="${NGS}/known_sites/hg19/nexterarapidcapture_expandedexome_targetedregions.bed"
 EXON_TARGET=TRUSEQ
 
