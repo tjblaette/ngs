@@ -1,9 +1,12 @@
 
 # add columns to variant CSVs to collect information of manual inspection
-for file in results_csv/*csv
-do
-  sed -i -e 's/^"Chr"/"Author","Project","BioID","Study","StudyID","PB-KM_ID","Time","TypeOfSequencing","Decision","Comment","Chr"/' -e 's/^"chr/"","","","","","","","","","","chr/' "$file"
-done
+if [ -e results_csv/ ]
+then 
+  for file in results_csv/*csv
+  do
+    sed -i -e 's/^"Chr"/"Author","Project","BioID","Study","StudyID","PB-KM_ID","Time","TypeOfSequencing","Decision","Comment","Chr"/' -e 's/^"chr/"","","","","","","","","","","chr/' "$file"
+  done
+fi
 
 
 #delete temporary files
