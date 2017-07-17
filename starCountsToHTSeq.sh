@@ -13,4 +13,4 @@
  MULTIMAPPED=$(grep 'multimap' $INPUT | cut -f2) 
  UNMAPPED=$(grep 'unmapped' $INPUT | cut -f2)
 
-cat <(grep -v '^N_' $INPUT | sort | cut -f1-$COLUMN) <(echo "__no_feature	$NOFEAT") <(echo "__ambiguous	$AMBIG") <(echo "__too_low_aQual	0") <(echo "__not_aligned	$UNMAPPED") <(echo "__alignment_not_unique	$MULTIMAPPED") > $OUTPUT
+cat <(grep -v '^N_' $INPUT | sort | cut -f1,$COLUMN) <(echo "__no_feature	$NOFEAT") <(echo "__ambiguous	$AMBIG") <(echo "__too_low_aQual	0") <(echo "__not_aligned	$UNMAPPED") <(echo "__alignment_not_unique	$MULTIMAPPED") > $OUTPUT
