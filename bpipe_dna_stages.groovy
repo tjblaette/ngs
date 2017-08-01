@@ -539,7 +539,7 @@ mergedAmplicon = {
     exec """sed -i -e '/^==>/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
 
    // final_sed 
-    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/"Otherinfo=(normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus)/' -e '1s/;/","/g' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
+    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus","leftFlankingSeq","rightFlankingSeq/' -e '1s/;/","/g' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
 
    // filterOutput
    exec "echo \$(date) running $FILTER"
@@ -548,7 +548,7 @@ mergedAmplicon = {
 
 
 final_sed = {
-    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/"normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus","leftFlankingSeq","rightFlankingSeq/' -e '1s/;/","/g'  $input"""
+    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus","leftFlankingSeq","rightFlankingSeq/' -e '1s/;/","/g'  $input"""
 }
 
 
