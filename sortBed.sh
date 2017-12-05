@@ -25,7 +25,7 @@ cut -f1 $REFFAI |
 while read CONTIG
 do
 	echo "$CONTIG"
-	grep -w "$CONTIG" $BED | sort -k1,1 -k2,2n >> ${BED%.bed}_sorted.bed
+	grep -w "$CONTIG" $BED | sort -k1,1 -k2,2n | uniq >> ${BED%.bed}_sorted.bed
 done 
 
 echo "Done sorting!"
