@@ -81,8 +81,8 @@ class Read(object):
         if substr_index != -1:
             barcode = self.seq[:substr_index]
             barcode_bqs = self.bqs[:substr_index]
-            self.seq = self.seq[len(primer):]
-            self.bqs = self.bqs[len(primer):]
+            self.seq = self.seq[substr_index:]
+            self.bqs = self.bqs[substr_index:]
             self.length = len(self.seq)
             return Read(seq=barcode, bqs=barcode_bqs, name=self.name, desc=self.desc, index=self.index, sense=self.sense)
             
