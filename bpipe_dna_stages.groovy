@@ -277,25 +277,25 @@ bqsrGATK = {
 mpileupSAMpad = {
     var exon_cover : EXON_TARGET
     var bqs : 25
-    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l ${exon_cover}_padded $input.bam > $output.pileup"""
+    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l ${exon_cover}_padded -d 1000000 $input.bam > $output.pileup"""
 }
 
 //additional stage to use non-padded BED for Amplicons
 mpileupSAMexact = {
     var exon_cover : EXON_TARGET
     var bqs : 25
-    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $exon_cover $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $exon_cover -d 1000000 $input.bam > $output.pileup"
 }
 
 //additional stage without BED for variant calling from RNA-seq
 mpileupSAM_noBed = {
     var bqs : 25
-    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -d 1000000 $input.bam > $output.pileup"
 }
 
 //additional stage without BED and quality filters for VarSim
 mpileupSAM_varsim = {
-    exec "$SAMTOOLS mpileup -f $REF $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -d 1000000 $input.bam > $output.pileup"
 }
 
 processSAM = segment {
