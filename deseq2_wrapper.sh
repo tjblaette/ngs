@@ -8,10 +8,11 @@
 # $5 = min absolute LFC tested for (default:0) -> does not take any effect because R function in deseq does not accept variable for lfc parameter
 
 IN=$1
-ALPHA=${2:-0.1}
-BIOMART=${3:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
-ENTREZ=${4:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
-LFC=${5:-0.6} # does not take any effect!
+DESIGN=${2:-'~ condition'} # design for testing with DESeq2 (must match column names in $1)
+ALPHA=${3:-0.1}
+LFC=${4:-0.6} # does not take any effect!
+BIOMART=${5:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
+ENTREZ=${6:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
 
 # check if the gene ID to Symbol conversion table exists already
 # if it does not, create it now
@@ -22,7 +23,7 @@ fi
 
 
 # RUN DESEQ2 SCRIPT
-Rscript $(dirname $0)/deseq2.R $IN $ALPHA $LFC
+Rscript $(dirname $0)/deseq2.R $IN $DESIGN $ALPHA $LFC
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
