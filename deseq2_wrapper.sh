@@ -23,7 +23,7 @@ fi
 
 
 # RUN DESEQ2 SCRIPT
-Rscript $(dirname $0)/deseq2.R $IN $DESIGN $ALPHA $LFC
+Rscript $(dirname $0)/deseq2.R $IN "$DESIGN" $ALPHA $LFC
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs

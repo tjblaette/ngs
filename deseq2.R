@@ -1,9 +1,9 @@
 args <- commandArgs(TRUE)
 print(args)
 input_file <- args[1]
-my_alpha <- as.numeric(args[2])
-my_lfc <- as.numeric(args[3])
-my_design <- args[4]
+my_design <- args[2]
+my_alpha <- as.numeric(args[3])
+my_lfc <- as.numeric(args[4])
 
 
 library("DESeq2")
