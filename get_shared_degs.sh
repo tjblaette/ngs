@@ -22,13 +22,13 @@ fi
 ALPHA=$1
 
 # extract DEGs within the first input file passed
-SHARED="$(awk -v alpha=$ALPHA '$8 < alpha' "$2" | cut -f1)"
+SHARED="$(awk -v alpha=$ALPHA '$8 <= alpha' "$2" | cut -f1)"
 
 # for each additional input file, select shared DEGs between $SHARED and the additional input file
 for i in "${@:3}"
 do
-    SHARED="$(grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 < alpha' "$i" | cut -f1))"
-    #grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 < alpha' "$i" | cut -f1)
+    SHARED="$(grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 <= alpha' "$i" | cut -f1))"
+    #grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 <= alpha' "$i" | cut -f1)
 done
 
 # print final shared DEGs
