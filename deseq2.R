@@ -23,11 +23,15 @@ fromFile <- function(input) {
     myTable[["patient"]] = factor(myTable[["patient"]])
     }
 
-    myddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable=myTable, directory=myDir, design= formula(my_design))
-    # set the reference/base level for differential testing to a specific group within a column in the design table: (otherwise the first group in alphabetical order is chosen)
+    myddsHTSeq <- DESeqDataSetFromHTSeqCount(
+            sampleTable=myTable,
+            directory=myDir,
+            design= formula(my_design))
+    # explicitely set the reference/base level for differential testing
+    # --> otherwise the first group in alphabetical order is chosen
     # myddsHTSeq$condition <- relevel(myddsHTSeq$condition, "control")
 
-    # filter genes basically not expressed 
+    # filter genes basically not expressed
     # --> will be filtered by DESeq2 anyway - doing it here will speed up analysis
     myddsHTSeq <- myddsHTSeq[ rowSums(counts(myddsHTSeq)) > 1, ]
 
@@ -46,13 +50,19 @@ save(mydds, file=paste(input_prefix,"_DESeq2results.RData", sep=""))
 
 # get normalized read counts
 counts <- counts(mydds,normalized=TRUE)
-write.table(counts, sep="\t", file=paste(input_prefix,"_DESeq2results_CountsNormalized.txt", sep=""))
+write.table(
+        counts,
+        sep="\t",
+        file=paste(input_prefix,"_DESeq2results_CountsNormalized.txt", sep=""))
 
 # get transformed read counts
 trans <- rlog(mydds)
 save(trans, file=paste(input_prefix,"_DESeq2results_trans.RData", sep=""))
 #load(file=paste(input_prefix,"_DESeq2results_trans.RData", sep=""))
-write.table(assay(trans), sep="\t", file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
+write.table(
+        assay(trans),
+        sep="\t",
+        file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
 
 
 # calculate coefficient of variation
@@ -74,7 +84,7 @@ colnames(df) <- cols
 
 
 # PREPARE PCA
-# PREPARE HEATMAP ANNOTATION COLORS (otherwise they do not match colors from PCA) 
+# PREPARE HEATMAP ANNOTATION COLORS (otherwise they do not match colors from PCA)
 # function to retrieve colors (evenly spaced on color ring)
 ggplotColours <- function(n=6, h=c(0, 360) +15){
     if ((diff(h)%%360) < 1) h[2] <- h[2] - 360/n
@@ -82,7 +92,7 @@ ggplotColours <- function(n=6, h=c(0, 360) +15){
 }
 
 # function to prepare data for PCA plotting (based on DESeq2 code)
-my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, returnData = FALSE, input_prefix=input_prefix) 
+my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, returnData = FALSE, input_prefix=input_prefix)
 {
     rv <- rowVars(assay(object))
     select <- order(rv, decreasing = TRUE)[seq_len(min(ntop, length(rv)))]
@@ -140,17 +150,7 @@ for (col in cols)
     colors <- colors[order(names(colors))]
     names(colors) <- sort(names(colors))
 
-#    # make annotation a bit lighter to make them easier on the eye / more easily distinguished?
-#    lighten <- function(color, factor=1.15)
-#    {
-#        col <- col2rgb(color)
-#        col <- col*factor
-#        col <- rgb(t(as.matrix(apply(col, 1, function(x) if (x > 255) 255 else x))), maxColorValue=255)
-#        col
-#    }
-#    colors <- sapply(colors, lighten)
-
-    # expand the list of colors later passed to pheatmap
+    # add to list of colors later passed to pheatmap
     anno_colors[[col]] <- colors
 
     # plot PCA -> if there is more than one annotation column, print a second PCA with all of that information
@@ -176,8 +176,6 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
 
     # transform counts and apply cv-based selection
     transCounts <- assay(trans)[select,]
-    ##write.table(transCounts, sep="\t",file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed_maxGenes_",maxGenes,".txt", sep=""))
-
 
     # PREPARE INTERSAMPLE DISTANCE CLUSTERING
     # euclidean distance
@@ -187,18 +185,42 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
     # pearson correlation distance (taken from pheatmap source code)
     sampleDists_corr <- as.dist(1 - cor(transCounts))
 
-    # to append sample info to sampleName for row labels:
-    #   rownames(sampleDistMatrix) <- paste(rownames(sampleDistMatrix), apply( df[ , cols ] , 1 , paste, collapse = "-" ), sep="-")
-
-
 
     #1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV, scaled by row
     #2: complete linkage clustering based on Pearson correlation of transformed read counts -> based on top X genes with max CV, scaled by row
     #3: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
     # to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
-    pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Euclidean distance - ",maxGenes,sep=""), clustering_distance_cols=sampleDists, border_color=NA)
-    pheatmap(transCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main=paste("Clustered by Pearson correlation - ",maxGenes,sep=""), clustering_distance_cols=sampleDists_corr, border_color=NA)
-    pheatmap(sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, border_color=NA)
+    pheatmap(
+            transCounts,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_cols=sampleDists,
+            main=paste("Clustered by Euclidean distance of ",maxGenes," top CV genes", sep=""),
+            scale="row",
+            show_rownames=FALSE,
+            treeheight_row=0,
+            fontsize=5,
+            border_color=NA)
+    pheatmap(
+            transCounts,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_cols=sampleDists_corr,
+            main=paste("Clustered by Pearson correlation of ",maxGenes," top CV genes", sep=""),
+            scale="row",
+            show_rownames=FALSE,
+            treeheight_row=0,
+            fontsize=5,
+            border_color=NA)
+    pheatmap(
+            sampleDistMatrix,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_rows=sampleDists,
+            clustering_distance_cols=sampleDists,
+            main=paste("Euclidean inter-sample distance based on ",maxGenes," top CV genes", sep=""),
+            fontsize=5,
+            border_color=NA)
 }
 
 dev.off()
@@ -208,7 +230,7 @@ dev.off()
 
 ###########################################################################################
 ###########################################################################################
-# PROCESS RESULTS OF DGE ANALYSIS 
+# PROCESS RESULTS OF DGE ANALYSIS
 
 
 myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThreshold=my_lfc)
@@ -220,7 +242,10 @@ sig <- which(myresults$padj < my_alpha)
 if(length(sig) > 1)
 {
     sigCounts <- assay(trans)[sig, ]
-    write.table(sigCounts, sep="\t", file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed_degs.txt", sep=""))
+    write.table(
+            sigCounts,
+            sep="\t",
+            file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed_degs.txt", sep=""))
 
     # euclidean distances
     sig_sampleDists <- dist(t(sigCounts))
@@ -247,9 +272,38 @@ if(length(sig) > 1)
     #    print(my_plotPCA(trans[sig, ], cols, 5, 6, "PC5: ", "PC6: "))
     #  }
 
-    pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists, border_color=NA)
-    pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr, border_color=NA)
-    pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists, border_color=NA)
+    # plot the same heatmaps as above, now for DEGs only
+    pheatmap(
+            sigCounts,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_cols=sig_sampleDists,
+            main="Clustered by Euclidean distance of DEGs",
+            scale="row",
+            show_rownames=length(sig)<=50,
+            treeheight_row=0,
+            fontsize=5,
+            border_color=NA)
+    pheatmap(
+            sigCounts,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_cols=sig_sampleDists_corr,
+            main="Clustered by Pearson correlation of DEGs",
+            scale="row",
+            show_rownames=length(sig)<=50,
+            treeheight_row=0,
+            fontsize=5,
+            border_color=NA)
+    pheatmap(
+            sig_sampleDistMatrix,
+            annotation_col=df,
+            annotation_color=anno_colors,
+            clustering_distance_rows=sig_sampleDists,
+            clustering_distance_cols=sig_sampleDists,
+            main="Euclidean inter-sample distance based on DEGs",
+            fontsize=5,
+            border_color=NA)
     dev.off()
 
     # plot DEG counts
@@ -269,7 +323,10 @@ if(length(sig) > 1)
 
 #sort according to adjusted p-value and write results to file
 myresultsOrdered <- myresults[order(myresults$padj),]
-write.table(myresultsOrdered, file=paste(input_prefix,"_DESeq2results.txt",sep=""),sep="\t")
+write.table(
+        myresultsOrdered,
+        sep="\t",
+        file=paste(input_prefix,"_DESeq2results.txt",sep=""))
 
 #print summary of deg analysis
 sink(paste(input_prefix,"_DESeq2results_summary.txt",sep=""))
@@ -309,9 +366,13 @@ sink()
 ###########################################################################################
 ## FIX ANNO
 
-#to convert ENSEMBL gene ids to gene symbols later, I have to remove the decimal now
+# to convert ENSEMBL gene ids to gene symbols later, I have to remove the decimal now
 rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
 
-#write deg analysis results to file -> overwrite if decimal removal was successful (will fail for Susi's circRNAs) and keep existing version otherwise
-write.table(myresultsOrdered, file=paste(input_prefix,"_DESeq2results.txt",sep=""),sep="\t")
+# rewrite deg analysis results to file
+# -> overwrite if decimal removal was successful (will fail for Susi's circRNAs) and keep existing version otherwise
+write.table(
+        myresultsOrdered,
+        sep="\t",
+        file=paste(input_prefix,"_DESeq2results.txt",sep=""))
 
