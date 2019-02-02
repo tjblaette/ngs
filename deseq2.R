@@ -250,7 +250,19 @@ if(length(sig) > 1)
     pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Euclidean distance", clustering_distance_cols=sig_sampleDists, border_color=NA)
     pheatmap(sigCounts, show_rownames=FALSE, treeheight_row=0, annotation_col=df, fontsize=5, scale="row", annotation_color=anno_colors, main="DEGs clustered by Pearson correlation", clustering_distance_cols=sig_sampleDists_corr, border_color=NA)
     pheatmap(sig_sampleDistMatrix, annotation_col=df, fontsize=5, annotation_color=anno_colors, clustering_distance_rows=sig_sampleDists, clustering_distance_cols=sig_sampleDists, border_color=NA)
+    dev.off()
 
+    # plot DEG counts
+    pdf(paste(input_prefix,"_DESeq2results_geneCountPlots_degs.pdf",sep=""))
+    for (i in sig)
+    {
+        plotCounts(
+                mydds,
+                gene=i,
+                xlab=my_design,
+                intgroup=attr(terms(formula(my_design)), "term.labels"),
+                replaced=("replaceCounts" %in% names(assays(mydds))))
+    }
     dev.off()
 }
 
@@ -270,18 +282,15 @@ sink()
 ###########################################################################################
 # ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
 
-# extract final variable from design formula
-my_intgroup = attr(terms(formula(my_design)), "term.labels")
-if (length(my_intgroup) > 1)
-{
-    my_intgroup = my_intgroup[-1]
-}
-
-# use that to plot normalized gene counts to pdf
 pdf(paste(input_prefix,"_DESeq2results_geneCountPlots.pdf",sep=""))
-for (i in 1:(dim(mydds)[1]))
+for (i in 1:nrow(mydds))
 {
-    plotCounts(mydds, gene=i, intgroup=my_intgroup)
+    plotCounts(
+            mydds,
+            gene=i,
+            xlab=my_design,
+            intgroup=attr(terms(formula(my_design)), "term.labels"),
+            replaced=("replaceCounts" %in% names(assays(mydds))))
 }
 dev.off()
 
