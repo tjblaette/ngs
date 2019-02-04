@@ -40,6 +40,16 @@ fromFile <- function(input) {
     return(mydds)
 }
 
+design_str_to_vector_of_terms <- function(design_str) {
+    vector_of_terms <- attr(terms(formula(design_str)), "term.labels")
+    return (vector_of_terms)
+}
+
+remove_interaction_terms <- function(design_terms) {
+    design_terms <- design_terms[!grepl(":", design_terms)]
+    return (design_terms)
+}
+
 mydds <- fromFile(input_file)
 save(mydds, file=paste(input_prefix,"_DESeq2results.RData", sep=""))
 #load(paste(input_prefix,"_DESeq2results.RData", sep=""))
@@ -314,7 +324,7 @@ if(length(sig) > 1)
                 mydds,
                 gene=i,
                 xlab=my_design,
-                intgroup=attr(terms(formula(my_design)), "term.labels"),
+                intgroup=remove_interaction_terms(design_str_to_vector_of_terms(my_design)),
                 replaced=("replaceCounts" %in% names(assays(mydds))))
     }
     dev.off()
@@ -346,7 +356,7 @@ for (i in 1:nrow(mydds))
             mydds,
             gene=i,
             xlab=my_design,
-            intgroup=attr(terms(formula(my_design)), "term.labels"),
+            intgroup=remove_interaction_terms(design_str_to_vector_of_terms(my_design)),
             replaced=("replaceCounts" %in% names(assays(mydds))))
 }
 dev.off()
