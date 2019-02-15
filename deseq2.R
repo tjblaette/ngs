@@ -3,7 +3,6 @@ print(args)
 input_file <- args[1]
 my_design <- args[2]
 my_reference_level <- args[3] # factor level to use as the reference for calculated fold changes
-print(my_reference_level)
 my_alpha <- as.numeric(args[4])
 my_lfc <- as.numeric(args[5])
 output_prefix <- args[6]
@@ -28,8 +27,6 @@ fromFile <- function(input) {
     myDir <- "intermediate_files"
     myTable <- read.table(input, header=TRUE)
     condition_to_test <- rev(remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)))[1]
-    print(condition_to_test)
-    print(my_reference_level)
 
     # patient must be a factor, even if ID is numeric
     if ("patient" %in% colnames(myTable))
@@ -43,7 +40,6 @@ fromFile <- function(input) {
             design= formula(my_design))
     # explicitely set the reference/base level for differential testing
     # --> otherwise the first group in alphabetical order is chosen
-    print(myddsHTSeq[[condition_to_test]])
     myddsHTSeq[[condition_to_test]] <- relevel(myddsHTSeq[[condition_to_test]], my_reference_level)
 
     # filter genes basically not expressed
@@ -56,6 +52,7 @@ fromFile <- function(input) {
 }
 
 mydds <- fromFile(input_file)
+my_terms_of_interest <- remove_interaction_terms(design_str_to_vector_of_str_terms(my_design))
 save(mydds, file=paste(output_prefix,".RData", sep=""))
 #load(paste(output_prefix,".RData", sep=""))
 
@@ -144,6 +141,56 @@ my_plotPCA <- function(data, intgroup, xPC, yPC, xPC_label, yPC_label, pass_outp
             ylab(paste0(yPC_label, percentVar[2], "% variance")) +
             labs(color = intgroup) +
             coord_fixed()
+}
+
+# function to pretty print gene counts, based on DESeq2 vignette code
+#   --> possibly very slow, try to speed things up
+my_plotCounts <- function(mydds, gene, design, terms_of_interest)
+{
+    plot_data <- plotCounts(
+            mydds,
+            gene=i,
+            xlab=design,
+            intgroup=terms_of_interest,
+            replaced=("replaceCounts" %in% names(assays(mydds))),
+            returnData=TRUE)
+
+    if (length(terms_of_interest) == 1)
+    {
+        print(ggplot(plot_data, aes_string(x=terms_of_interest[1], y="count")) +
+                geom_jitter(size=1.5, position = position_jitter(width=.15)) +
+                stat_summary(fun.y=mean, geom="line", colour="red", size=0.8, aes(group=terms_of_interest[1])) +
+                xlab(terms_of_interest[1]) +
+                ylab("normalized counts") +
+                ggtitle(rownames(mydds[i])))
+    } else {
+        if (length(terms_of_interest) == 2)
+        {
+            ggplot_data <- ggplot(plot_data, aes_string(x=terms_of_interest[2], y="count", group=terms_of_interest[1])) +
+                    facet_wrap(as.formula(paste("~", terms_of_interest[1]))) +
+                    stat_summary(fun.y=mean, geom="line", colour="red", size=0.8) +
+                    xlab(terms_of_interest[1]) +
+                    ylab("normalized counts") +
+                    ggtitle(rownames(mydds[i]))
+            # if this is a paired analysis, i.e. each facet contains 1 data point per condition, do not jitter
+            # --> or the other way around: jitter only, if this is NOT a paired analysis,
+            #           i.e. if there is more than data point in plot_data per combination of terms_of_interest
+            if (length(unique(plot_data[[terms_of_interest[1]]])) * length(unique(plot_data[[terms_of_interest[2]]]))  < dim(plot_data)[1])
+            {
+                ggplot_data <- ggplot_data +
+                        geom_jitter(size=1.5, position = position_jitter(width=.15))
+            }
+            print(ggplot_data)
+        } else {
+            # for designs with more than 2 terms, use default plots
+            plotCounts(
+                    mydds,
+                    gene=i,
+                    xlab=design,
+                    intgroup=terms_of_interest,
+                    replaced=("replaceCounts" %in% names(assays(mydds))))
+        }
+    }
 }
 
 # actually plot PCA, color-coding each group in annotation-df separately
@@ -325,12 +372,7 @@ if(length(sig) > 1)
     pdf(paste(output_prefix,"_geneCountPlots_degs.pdf",sep=""))
     for (i in sig)
     {
-        plotCounts(
-                mydds,
-                gene=i,
-                xlab=my_design,
-                intgroup=remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)),
-                replaced=("replaceCounts" %in% names(assays(mydds))))
+        my_plotCounts(mydds, gene=i, design=my_design, terms_of_interest=my_terms_of_interest)
     }
     dev.off()
 }
@@ -361,7 +403,7 @@ for (i in 1:nrow(mydds))
             mydds,
             gene=i,
             xlab=my_design,
-            intgroup=remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)),
+            intgroup=my_terms_of_interest,
             replaced=("replaceCounts" %in% names(assays(mydds))))
 }
 dev.off()
