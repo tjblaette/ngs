@@ -4,23 +4,21 @@ input_file <- args[1]
 my_design <- args[2]
 my_alpha <- as.numeric(args[3])
 my_lfc <- as.numeric(args[4])
+output_prefix <- args[5]
 
 library(DESeq2)
 library(pheatmap)
 library(ggplot2)
 
-# extract input file prefix to serve as output file prefix
-# remove path to place output files in working directory
-library(tools)
-input_prefix <- basename(file_path_sans_ext(input_file))
-
 
 fromFile <- function(input) {
     myDir <- "intermediate_files"
     myTable <- read.table(input, header=TRUE)
+
+    # patient must be a factor, even if ID is numeric
     if ("patient" %in% colnames(myTable))
     {
-    myTable[["patient"]] = factor(myTable[["patient"]])
+        myTable[["patient"]] = factor(myTable[["patient"]])
     }
 
     myddsHTSeq <- DESeqDataSetFromHTSeqCount(
@@ -51,8 +49,8 @@ remove_interaction_terms <- function(design_terms) {
 }
 
 mydds <- fromFile(input_file)
-save(mydds, file=paste(input_prefix,"_DESeq2results.RData", sep=""))
-#load(paste(input_prefix,"_DESeq2results.RData", sep=""))
+save(mydds, file=paste(output_prefix,".RData", sep=""))
+#load(paste(output_prefix,".RData", sep=""))
 
 ###########################################################################################
 ###########################################################################################
@@ -63,16 +61,16 @@ counts <- counts(mydds,normalized=TRUE)
 write.table(
         counts,
         sep="\t",
-        file=paste(input_prefix,"_DESeq2results_CountsNormalized.txt", sep=""))
+        file=paste(output_prefix,"_CountsNormalized.txt", sep=""))
 
 # get transformed read counts
 trans <- rlog(mydds)
-save(trans, file=paste(input_prefix,"_DESeq2results_trans.RData", sep=""))
-#load(file=paste(input_prefix,"_DESeq2results_trans.RData", sep=""))
+save(trans, file=paste(output_prefix,"_trans.RData", sep=""))
+#load(file=paste(output_prefix,"_trans.RData", sep=""))
 write.table(
         assay(trans),
         sep="\t",
-        file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed.txt", sep=""))
+        file=paste(output_prefix,"_CountsNormalizedTransformed.txt", sep=""))
 
 
 # calculate coefficient of variation
@@ -83,7 +81,7 @@ cv <- standev/avrg
 
 
 # PREPARE PLOTTING
-pdf(paste(input_prefix,"_DESeq2results_exploratory.pdf",sep=""), height=10)
+pdf(paste(output_prefix,"_exploratory.pdf",sep=""), height=10)
 
 # extract sample labels -> for columns get all factors for each sample
 all_cols <- names(colData(mydds))
@@ -102,12 +100,12 @@ ggplotColours <- function(n=6, h=c(0, 360) +15){
 }
 
 # function to prepare data for PCA plotting (based on DESeq2 code)
-my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, returnData = FALSE, input_prefix=input_prefix)
+my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, returnData = FALSE, output_prefix=output_prefix)
 {
     rv <- rowVars(assay(object))
     select <- order(rv, decreasing = TRUE)[seq_len(min(ntop, length(rv)))]
     pca <- prcomp(t(assay(object)[select, ]))
-    write.table(pca["rotation"], file=paste(input_prefix, "_DESeq2_pca.txt", sep=""), sep="\t")
+    write.table(pca["rotation"], file=paste(output_prefix, "_pca.txt", sep=""), sep="\t")
     percentVar <- pca$sdev^2/sum(pca$sdev^2)
 
     if (!all(intgroup %in% names(colData(object)))) {
@@ -129,9 +127,9 @@ my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, re
 }
 
 # function to plot PCA (based on DESeq2 code)
-my_plotPCA <- function(data, intgroup, xPC, yPC, xPC_label, yPC_label, pass_inputprefix=input_prefix)
+my_plotPCA <- function(data, intgroup, xPC, yPC, xPC_label, yPC_label, pass_outputprefix=output_prefix)
 {
-    pcaData <- my_prepPCA(data, xPC, yPC, intgroup=intgroup, returnData=TRUE, input_prefix=pass_inputprefix)
+    pcaData <- my_prepPCA(data, xPC, yPC, intgroup=intgroup, returnData=TRUE, output_prefix=pass_outputprefix)
     percentVar <- round(100 * attr(pcaData, "percentVar"))
     ggplot(pcaData, aes_(as.name("PC1"), as.name("PC2"), color = as.name(intgroup))) +
             geom_point(size = 3) +
@@ -255,7 +253,7 @@ if(length(sig) > 1)
     write.table(
             sigCounts,
             sep="\t",
-            file=paste(input_prefix,"_DESeq2results_CountsNormalizedTransformed_degs.txt", sep=""))
+            file=paste(output_prefix,"_CountsNormalizedTransformed_degs.txt", sep=""))
 
     # euclidean distances
     sig_sampleDists <- dist(t(sigCounts))
@@ -265,7 +263,7 @@ if(length(sig) > 1)
     sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
 
     # plot PCAs, again color-coding each of the annotations separately
-    pdf(paste(input_prefix,"_DESeq2results_degs.pdf",sep=""), height=10)
+    pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
     for (col in cols)
     {
         print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: "))
@@ -317,7 +315,7 @@ if(length(sig) > 1)
     dev.off()
 
     # plot DEG counts
-    pdf(paste(input_prefix,"_DESeq2results_geneCountPlots_degs.pdf",sep=""))
+    pdf(paste(output_prefix,"_geneCountPlots_degs.pdf",sep=""))
     for (i in sig)
     {
         plotCounts(
@@ -336,10 +334,10 @@ myresultsOrdered <- myresults[order(myresults$padj),]
 write.table(
         myresultsOrdered,
         sep="\t",
-        file=paste(input_prefix,"_DESeq2results.txt",sep=""))
+        file=paste(output_prefix,".txt",sep=""))
 
 #print summary of deg analysis
-sink(paste(input_prefix,"_DESeq2results_summary.txt",sep=""))
+sink(paste(output_prefix,"_summary.txt",sep=""))
 summary(myresults)
 sink()
 
@@ -349,7 +347,7 @@ sink()
 ###########################################################################################
 # ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
 
-pdf(paste(input_prefix,"_DESeq2results_geneCountPlots.pdf",sep=""))
+pdf(paste(output_prefix,"_geneCountPlots.pdf",sep=""))
 for (i in 1:nrow(mydds))
 {
     plotCounts(
@@ -367,7 +365,7 @@ dev.off()
 ###########################################################################################
 ## PRINT SESSION INFO
 
-sink(paste(input_prefix,"_sessionInfo.txt",sep=""))
+sink(paste(output_prefix,"_sessionInfo.txt",sep=""))
 print(sessionInfo())
 sink()
 
@@ -384,5 +382,5 @@ rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split=
 write.table(
         myresultsOrdered,
         sep="\t",
-        file=paste(input_prefix,"_DESeq2results.txt",sep=""))
+        file=paste(output_prefix,".txt",sep=""))
 
