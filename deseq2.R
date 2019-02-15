@@ -2,18 +2,34 @@ args <- commandArgs(TRUE)
 print(args)
 input_file <- args[1]
 my_design <- args[2]
-my_alpha <- as.numeric(args[3])
-my_lfc <- as.numeric(args[4])
-output_prefix <- args[5]
+my_reference_level <- args[3] # factor level to use as the reference for calculated fold changes
+print(my_reference_level)
+my_alpha <- as.numeric(args[4])
+my_lfc <- as.numeric(args[5])
+output_prefix <- args[6]
 
 library(DESeq2)
 library(pheatmap)
 library(ggplot2)
 
 
+design_str_to_vector_of_str_terms <- function(design_str) {
+    vector_of_terms <- attr(terms(formula(design_str)), "term.labels")
+    return (vector_of_terms)
+}
+
+remove_interaction_terms <- function(design_terms) {
+    design_terms <- design_terms[!grepl(":", design_terms)]
+    return (design_terms)
+}
+
+
 fromFile <- function(input) {
     myDir <- "intermediate_files"
     myTable <- read.table(input, header=TRUE)
+    condition_to_test <- rev(remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)))[1]
+    print(condition_to_test)
+    print(my_reference_level)
 
     # patient must be a factor, even if ID is numeric
     if ("patient" %in% colnames(myTable))
@@ -27,7 +43,8 @@ fromFile <- function(input) {
             design= formula(my_design))
     # explicitely set the reference/base level for differential testing
     # --> otherwise the first group in alphabetical order is chosen
-    # myddsHTSeq$condition <- relevel(myddsHTSeq$condition, "control")
+    print(myddsHTSeq[[condition_to_test]])
+    myddsHTSeq[[condition_to_test]] <- relevel(myddsHTSeq[[condition_to_test]], my_reference_level)
 
     # filter genes basically not expressed
     # --> will be filtered by DESeq2 anyway - doing it here will speed up analysis
@@ -36,16 +53,6 @@ fromFile <- function(input) {
     # differential expression testing
     mydds <- DESeq(myddsHTSeq)
     return(mydds)
-}
-
-design_str_to_vector_of_terms <- function(design_str) {
-    vector_of_terms <- attr(terms(formula(design_str)), "term.labels")
-    return (vector_of_terms)
-}
-
-remove_interaction_terms <- function(design_terms) {
-    design_terms <- design_terms[!grepl(":", design_terms)]
-    return (design_terms)
 }
 
 mydds <- fromFile(input_file)
@@ -322,7 +329,7 @@ if(length(sig) > 1)
                 mydds,
                 gene=i,
                 xlab=my_design,
-                intgroup=remove_interaction_terms(design_str_to_vector_of_terms(my_design)),
+                intgroup=remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)),
                 replaced=("replaceCounts" %in% names(assays(mydds))))
     }
     dev.off()
@@ -354,7 +361,7 @@ for (i in 1:nrow(mydds))
             mydds,
             gene=i,
             xlab=my_design,
-            intgroup=remove_interaction_terms(design_str_to_vector_of_terms(my_design)),
+            intgroup=remove_interaction_terms(design_str_to_vector_of_str_terms(my_design)),
             replaced=("replaceCounts" %in% names(assays(mydds))))
 }
 dev.off()

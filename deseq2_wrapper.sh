@@ -2,22 +2,27 @@
 
 
 # $1 = input file for DESeq2, tsv file specifying at least columms fileName, sampleName and the condition to test on
-# $2 = design for testing with DESeq2 (must match column names in $1), default: "~ condition"
-# $3 = alpha for DEG statistic (independent filtering is used to maximize the numer of genes whose FDR is at most this "alpha"), default: 0.1
-# $4 = min absolute log fold change tested for by DESeq2, default: 0.6
-# $5 = DB for gene id conversion (Ensembl to gene symbol), default: '/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'
-# $6 = DB for gene id conversion (Ensembl to Entrez gene ID), default: '/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'
+# $2 = design for testing with DESeq2 (must match column names in $1), for example: "~ condition" or "~ patient + condition"
+# $3 = reference level for the log fold changes calculated by DESeq2, for example "untreated" 
+#       -> by default, DESeq2 would choose the first level in alphabetical order 
+#       -> to make sure that data is not by mistake misinterpreted, the reference level is set explicitely and must be passed as a parameter by the user
+# $4 = alpha for DEG statistic (independent filtering is used to maximize the numer of genes whose FDR is at most this "alpha"), default: 0.1
+# $5 = min absolute log fold change tested for by DESeq2, default: 0.6
+# $6 = DB for gene id conversion (Ensembl to gene symbol), default: '/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'
+# $7 = DB for gene id conversion (Ensembl to Entrez gene ID), default: '/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'
 
-IN=$1
+IN="$1"
 IN_PREFIX="$(basename "${IN%.tsv}")"
 
-DESIGN=${2:-'~ condition'}
+DESIGN="$2" #${2:-'~ condition'}
 OUT_PREFIX="${IN_PREFIX}_DESeq2$(echo $DESIGN | sed 's/ //g')"
 
-ALPHA=${3:-0.1}
-LFC=${4:-0.6}
-BIOMART=${5:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
-ENTREZ=${6:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
+REFERENCE_LEVEL="$3"
+
+ALPHA=${4:-0.1}
+LFC=${5:-0.6}
+BIOMART=${6:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
+ENTREZ=${7:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
 
 # check if the gene ID to Symbol conversion table exists already
 # if it does not, create it now
@@ -29,7 +34,7 @@ fi
 
 # RUN DESEQ2 SCRIPT
 # -> use the script in the same folder as this script
-Rscript "$(dirname $0)/deseq2.R" "$IN" "$DESIGN" "$ALPHA" "$LFC" "$OUT_PREFIX"
+Rscript "$(dirname $0)/deseq2.R" "$IN" "$DESIGN" "$REFERENCE_LEVEL" "$ALPHA" "$LFC" "$OUT_PREFIX"
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
