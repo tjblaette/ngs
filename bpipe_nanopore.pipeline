@@ -9,6 +9,7 @@ load 'bpipe_rna_config.groovy'
 
 Bpipe.run {
 	getVersions + 
-	"%.fastq" * [ alignMEMlong + processPICARD ]
+	"%.fastq" * [ alignMEMlong + processPICARD ] +
+        cleanUp
 }
 

@@ -59,10 +59,3 @@ head -n 1 $1 > ${2}_candidates.csv
 grep -i -f $3 ${2}_filtered_final.csv >> ${2}_candidates.csv
 echo "" >> ${2}_filter_statistic.txt
 echo "$(( $(wc -l ${2}_candidates.csv | cut -f1 -d' ') -1)) calls in ${2}_filtered_final.csv were matched to an AML candidate gene in $3 and saved to ${2}_candidates.csv" >> ${2}_filter_statistic.txt
-
-
-#######################################################################################################################################################################################################
-#######################################################################################################################################################################################################
-
-#delete temporary files
-bpipe_finish.sh

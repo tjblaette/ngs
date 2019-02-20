@@ -571,5 +571,8 @@ filterOutput = {
       exec "$FILTER $input.csv $input.csv.prefix $candidates $REF 15"
 }
 
+cleanUp = {
+    exec "bpipe_finish.sh"
+}
 
 

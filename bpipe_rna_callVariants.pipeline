@@ -16,6 +16,7 @@ Bpipe.run {
         "*.somVARSCunpaired.%" * [ processVARSC ] +
         "*.somVARSCunpaired.%.%" * [ dummy + doublePos ] +
         "%.fixed" * [  tableANNOVAR ]  + merged +
-        "*R1%merged.csv" * [ final_sed + filterOutput ]
+        "*R1%merged.csv" * [ final_sed + filterOutput ] +
+        cleanUp
 }
 

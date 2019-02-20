@@ -13,6 +13,7 @@ Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
 //      "%_R*.fastq" * [ callVariants_RNA ] + "%somVARSCunpaired.%" * [ sed_rfmt + processVARSC ] + "%.pass.%" * [ doublePos ] + "%.pass.%.rwrt" * [  tableANNOVAR ] +
-	"%_R*.fastq" * [ alignSTAR + indexPIC ]
+	"%_R*.fastq" * [ alignSTAR + indexPIC ] +
+        cleanUp
 }
 

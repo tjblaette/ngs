@@ -11,6 +11,7 @@ REFDIR="/NGS/refgenome/lambda/star_lambda_ont/"
 
 Bpipe.run {
 	getVersions + 
-	"%.fastq" * [ alignSTARlong + indexPIC ]
+	"%.fastq" * [ alignSTARlong + indexPIC ] +
+        cleanUp
 }
 

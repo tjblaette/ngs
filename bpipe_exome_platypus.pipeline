@@ -13,6 +13,7 @@ Bpipe.run {
         "*PLATYPUS.vcf" * [ processBED ] +
         "%ct.vcf" * [ conv2ANNO ] +
         "%avinput" * [ tableANNOVAR ] +
-	"%.csv" * [ finalSedPLATYPUS ] 
+	"%.csv" * [ finalSedPLATYPUS ] +
+        cleanUp
 }
 
