@@ -12,7 +12,8 @@ load 'bpipe_rna_mouse_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-	"%_R*.fastq" * [ alignSTAR + indexPIC ] +
+	"%_R*.fastq" * [ alignSTAR + dedupOptPIC + unmarkDupsPIC ] +
+        "%.unmarkDupsPIC.bam" * [ countHTSeq_unstranded, countHTSeq_sameStranded, countHTSeq_otherStranded ] +
         cleanUp
 }
 

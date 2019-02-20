@@ -92,9 +92,19 @@ splitNtrimGATK = {
                 -o $output.bam"""
 }
 
-countHTSeq = {
+countHTSeq_unstranded = {
         output.dir="intermediate_files"
-        exec "python -m HTSeq.scripts.count $input.bam $GTF --stranded=no --format=bam --order=pos > $output.txt"
+        exec "python -m HTSeq.scripts.count $input.bam $GTF --stranded=no --format=bam --order=pos > $output.counts"
+}
+
+countHTSeq_sameStranded = {
+        output.dir="intermediate_files"
+        exec "python -m HTSeq.scripts.count $input.bam $GTF --stranded=yes --format=bam --order=pos > $output.counts"
+}
+
+countHTSeq_otherStranded = {
+        output.dir="intermediate_files"
+        exec "python -m HTSeq.scripts.count $input.bam $GTF --stranded=reverse --format=bam --order=pos > $output.counts"
 }
 
 callVariants_RNA = segment {

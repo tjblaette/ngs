@@ -193,6 +193,27 @@ dedupPIC = {
 	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
 }
 
+dedupOptPIC = {
+    output.dir="intermediate_files"
+    exec """$PICARD MarkDuplicates
+	INPUT=$input.bam
+	OUTPUT=$output.bam
+	REMOVE_SEQUENCING_DUPLICATES=true
+	CREATE_INDEX=true
+	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
+}
+
+unmarkDupsPIC = {
+    output.dir="intermediate_files"
+    exec """$PICARD RevertSam
+        INPUT=$input.bam
+        OUTPUT=$output.bam
+        CREATE_INDEX=true
+        SORT_ORDER=coordinate
+        REMOVE_DUPLICATE_INFORMATION=true
+        REMOVE_ALIGNMENT_INFORMATION=false"""
+}
+
 dedupBarcode = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
@@ -459,7 +480,7 @@ somVARSCunpaired = {
 
 amplicon = segment {
         alignMEM +
-	idxstatPIC +
+	dedupOptPIC + unmarkDupsPIC +
         realignGATK + 
         [ coverBED, mpileupSAMexact ] +
         somVARSCunpaired
