@@ -60,6 +60,16 @@ save(mydds, file=paste(output_prefix,".RData", sep=""))
 ###########################################################################################
 # PREPARE FOR EXPLORATORY ANALYSIS
 
+# plot sparsity
+# plot of the concentration of counts in a single sample over the sum of counts per gene.
+# --> useful diagnostic for datasets which might not fit a negative binomial assumption:
+#     genes with many zeros and individual very large counts are difficult to model with
+#     the negative binomial distribution.
+pdf(paste(output_prefix,"_sparsity.pdf",sep=""), height=10)
+plotSparsity(mydds)
+dev.off()
+
+
 # get normalized read counts
 counts <- counts(mydds,normalized=TRUE)
 write.table(
