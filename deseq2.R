@@ -68,6 +68,18 @@ write.table(
         sep="\t",
         file=paste(output_prefix,"_sizeFactors.txt", sep=""))
 
+# if "replace_sizeFactors.txt" is present in the current folder, load and overwrite current ones
+#   --> format of "replace_sizeFactors.txt" must be the same as that saved above
+sizeFactor_file <- file.path(dirname(input_file), "replace_sizeFactors.txt")
+if (file.exists(sizeFactor_file)) {
+    tmp_df <- read.table(sizeFactor_file)
+    my_sizeFactors <- tmp_df$sizeFactor
+    names(my_sizeFactors) <- rownames(tmp_df)
+
+    sizeFactors(mydds) <- my_sizeFactors
+}
+
+
 # plot sparsity
 # plot of the concentration of counts in a single sample over the sum of counts per gene.
 # --> useful diagnostic for datasets which might not fit a negative binomial assumption:
