@@ -211,7 +211,7 @@ for (col in cols)
     # retrieve colors for required number of groups to differentiate within col
     # colors <- ggplotColours(length(unique(na.omit(df[[col]]))))
     # retrieve colors used by PCA (PCA command copied from below!)
-    colors <- unique(ggplot_build(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: "))$data[[1]][["colour"]])
+    colors <- unique(ggplot_build(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))$data[[1]][["colour"]])
 
     # label colors with corresponding group
     names(colors) <- unique(df[[col]])
@@ -226,9 +226,9 @@ for (col in cols)
     anno_colors[[col]] <- colors
 
     # plot PCA -> if there is more than one annotation column, print a second PCA with all of that information
-    print(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: "))
-    print(my_plotPCA(trans, col, 3, 4, "PC3: ", "PC4: "))
-    print(my_plotPCA(trans, col, 5, 6, "PC5: ", "PC6: "))
+    print(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
+    print(my_plotPCA(trans, col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
+    print(my_plotPCA(trans, col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
 }
 
 # this is not working! printing one of cols only!
@@ -330,9 +330,15 @@ if(length(sig) > 1)
     pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
     for (col in cols)
     {
-        print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: "))
-        print(my_plotPCA(trans[sig, ], col, 3, 4, "PC3: ", "PC4: "))
-        print(my_plotPCA(trans[sig, ], col, 5, 6, "PC5: ", "PC6: "))
+        if (length(sig) >= 2) {
+            print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+        }
+        if (length(sig) >= 4) {
+            print(my_plotPCA(trans[sig, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+        }
+        if (length(sig) >= 6) {
+            print(my_plotPCA(trans[sig, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+        }
     }
 
     #  if (length(cols) > 1)
