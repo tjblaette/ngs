@@ -60,6 +60,14 @@ save(mydds, file=paste(output_prefix,".RData", sep=""))
 ###########################################################################################
 # PREPARE FOR EXPLORATORY ANALYSIS
 
+# save normalization factors to file
+# --> normalized counts = raw counts / normlization factors
+write.table(
+        sizeFactors(mydds),
+        col.names=c("sizeFactor"),
+        sep="\t",
+        file=paste(output_prefix,"_sizeFactors.txt", sep=""))
+
 # plot sparsity
 # plot of the concentration of counts in a single sample over the sum of counts per gene.
 # --> useful diagnostic for datasets which might not fit a negative binomial assumption:
