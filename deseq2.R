@@ -44,7 +44,8 @@ fromFile <- function(input) {
 
     # filter genes basically not expressed
     # --> will be filtered by DESeq2 anyway - doing it here will speed up analysis
-    myddsHTSeq <- myddsHTSeq[ rowSums(counts(myddsHTSeq)) > 1, ]
+    myddsHTSeq <- myddsHTSeq[ rowSums(counts(myddsHTSeq)) > 2, ] # require min 3 total counts
+    #myddsHTSeq <- myddsHTSeq[ rowSums(counts(myddsHTSeq) > 0) > 3, ] # require min 4 samples expressing feature at all
 
     # differential expression testing
     mydds <- DESeq(myddsHTSeq)
