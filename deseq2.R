@@ -275,9 +275,6 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
     sampleDists <- dist(t(transCounts))
     sampleDistMatrix <- as.matrix(sampleDists)
 
-    # pearson correlation distance (taken from pheatmap source code)
-    sampleDists_corr <- as.dist(1 - cor(transCounts))
-
 
     #1: complete linkage clustering based on Euclidean distance of transformed read counts -> based on top X genes with max CV, scaled by row
     #2: complete linkage clustering based on Pearson correlation of transformed read counts -> based on top X genes with max CV, scaled by row
@@ -294,17 +291,27 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
             treeheight_row=0,
             fontsize=5,
             border_color=NA)
-    pheatmap(
-            transCounts,
-            annotation_col=df,
-            annotation_color=anno_colors,
-            clustering_distance_cols=sampleDists_corr,
-            main=paste("Clustered by Pearson correlation of ",maxGenes," top CV genes", sep=""),
-            scale="row",
-            show_rownames=FALSE,
-            treeheight_row=0,
-            fontsize=5,
-            border_color=NA)
+
+    # pearson correlation distance (taken from pheatmap source code)
+    # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
+    # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
+    if (sum(apply(transCounts, 2, sd) == 0) > 0) {
+        cat("\n----\nClustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n----\n")
+    } else {
+        sampleDists_corr <- as.dist(1 - cor(transCounts))
+        pheatmap(
+                transCounts,
+                annotation_col=df,
+                annotation_color=anno_colors,
+                clustering_distance_cols=sampleDists_corr,
+                main=paste("Clustered by Pearson correlation of ",maxGenes," top CV genes", sep=""),
+                scale="row",
+                show_rownames=FALSE,
+                treeheight_row=0,
+                fontsize=5,
+                border_color=NA)
+    }
+
     pheatmap(
             sampleDistMatrix,
             annotation_col=df,
@@ -344,9 +351,6 @@ if(length(sig) > 1)
     sig_sampleDists <- dist(t(sigCounts))
     sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
 
-    # pearson correlation distances (taken from pheatmap source code)
-    sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
-
     # plot PCAs, again color-coding each of the annotations separately
     pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
     for (col in cols)
@@ -383,17 +387,27 @@ if(length(sig) > 1)
             treeheight_row=0,
             fontsize=5,
             border_color=NA)
-    pheatmap(
-            sigCounts,
-            annotation_col=df,
-            annotation_color=anno_colors,
-            clustering_distance_cols=sig_sampleDists_corr,
-            main="Clustered by Pearson correlation of DEGs",
-            scale="row",
-            show_rownames=length(sig)<=50,
-            treeheight_row=0,
-            fontsize=5,
-            border_color=NA)
+
+    # pearson correlation distances (taken from pheatmap source code)
+    # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
+    # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
+    if (sum(apply(sigCounts, 2, sd) == 0) > 0) {
+        cat("\n----\nClustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n----\n")
+    } else {
+        sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
+        pheatmap(
+                sigCounts,
+                annotation_col=df,
+                annotation_color=anno_colors,
+                clustering_distance_cols=sig_sampleDists_corr,
+                main="Clustered by Pearson correlation of DEGs",
+                scale="row",
+                show_rownames=length(sig)<=50,
+                treeheight_row=0,
+                fontsize=5,
+                border_color=NA)
+    }
+
     pheatmap(
             sig_sampleDistMatrix,
             annotation_col=df,
