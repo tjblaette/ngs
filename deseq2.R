@@ -7,7 +7,7 @@ my_alpha <- as.numeric(args[4])
 my_lfc <- as.numeric(args[5])
 output_prefix <- args[6]
 
-library(DESeq2)
+suppressMessages(library(DESeq2))
 library(pheatmap)
 library(ggplot2)
 
