@@ -1,5 +1,4 @@
 args <- commandArgs(TRUE)
-print(args)
 input_file <- args[1]
 my_design <- args[2]
 my_reference_level <- args[3] # factor level to use as the reference for calculated fold changes
@@ -7,6 +6,16 @@ my_alpha <- as.numeric(args[4])
 my_lfc <- as.numeric(args[5])
 output_prefix <- args[6]
 
+# save script arguments to file
+sink(paste(output_prefix, "_args.txt", sep=""), split=TRUE)
+cat("Input file: ", input_file)
+cat("\nDesign formula: ", my_design)
+cat("\nReference level: ", my_reference_level)
+cat("\nFDR cutoff alpha: ", my_alpha)
+cat("\nMinimum log fold change: ", my_lfc, "\n")
+sink()
+
+# load required libraries
 suppressMessages(library(DESeq2))
 library(pheatmap)
 library(ggplot2)
@@ -52,6 +61,7 @@ fromFile <- function(input) {
     return(mydds)
 }
 
+cat("\nRunning DESeq2...\n")
 mydds <- fromFile(input_file)
 my_terms_of_interest <- remove_interaction_terms(design_str_to_vector_of_str_terms(my_design))
 save(mydds, file=paste(output_prefix,".RData", sep=""))
@@ -86,9 +96,11 @@ if (file.exists(sizeFactor_file)) {
 # --> useful diagnostic for datasets which might not fit a negative binomial assumption:
 #     genes with many zeros and individual very large counts are difficult to model with
 #     the negative binomial distribution.
+cat("\nPrinting sparsity plot...\n")
 pdf(paste(output_prefix,"_sparsity.pdf",sep=""), height=10)
 plotSparsity(mydds)
-dev.off()
+cat("done\n")
+invisible(dev.off())
 
 
 # get normalized read counts
@@ -116,6 +128,7 @@ cv <- standev/avrg
 
 
 # PREPARE PLOTTING
+cat("\nPrinting exploratory PCA and clusters...\n")
 pdf(paste(output_prefix,"_exploratory.pdf",sep=""), height=10)
 
 # extract sample labels -> for columns get all factors for each sample
@@ -296,7 +309,7 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
     # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
     # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
     if (sum(apply(transCounts, 2, sd) == 0) > 0) {
-        cat("\n----\nClustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n----\n")
+        cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
     } else {
         sampleDists_corr <- as.dist(1 - cor(transCounts))
         pheatmap(
@@ -323,7 +336,8 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
             border_color=NA)
 }
 
-dev.off()
+cat("done\n")
+invisible(dev.off())
 
 
 
@@ -352,6 +366,7 @@ if(length(sig) > 1)
     sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
 
     # plot PCAs, again color-coding each of the annotations separately
+    cat("\nPrinting DEG PCA and clusters...\n")
     pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
     for (col in cols)
     {
@@ -392,7 +407,7 @@ if(length(sig) > 1)
     # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
     # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
     if (sum(apply(sigCounts, 2, sd) == 0) > 0) {
-        cat("\n----\nClustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n----\n")
+        cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
     } else {
         sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
         pheatmap(
@@ -417,15 +432,20 @@ if(length(sig) > 1)
             main="Euclidean inter-sample distance based on DEGs",
             fontsize=5,
             border_color=NA)
-    dev.off()
+    cat("done\n")
+    invisible(dev.off())
 
     # plot DEG counts
+    cat("\nPrinting DEG counts...\n")
     pdf(paste(output_prefix,"_geneCountPlots_degs.pdf",sep=""))
     for (i in sig)
     {
         my_plotCounts(mydds, gene=i, design=my_design, terms_of_interest=my_terms_of_interest)
     }
-    dev.off()
+    cat("done\n")
+    invisible(dev.off())
+} else {
+    cat("\nNo DEGs to process!\n")
 }
 
 
@@ -447,6 +467,7 @@ sink()
 ###########################################################################################
 # ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
 
+cat("\nPrinting all counts...\n")
 pdf(paste(output_prefix,"_geneCountPlots.pdf",sep=""))
 for (i in 1:nrow(mydds))
 {
@@ -457,7 +478,8 @@ for (i in 1:nrow(mydds))
             intgroup=my_terms_of_interest,
             replaced=("replaceCounts" %in% names(assays(mydds))))
 }
-dev.off()
+cat("done\n")
+invisible(dev.off())
 
 
 
