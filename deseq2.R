@@ -349,7 +349,24 @@ invisible(dev.off())
 
 myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThreshold=my_lfc)
 
-# plot heatmap with DEGs only
+# sort according to adjusted p-value and write results to file
+write.table(
+        myresults[order(myresults$padj),],
+        sep="\t",
+        file=paste(output_prefix,".txt",sep=""))
+
+# print summary of deg analysis
+sink(paste(output_prefix,"_summary.txt",sep=""))
+summary(myresults)
+sink()
+
+
+
+###########################################################################################
+###########################################################################################
+# PROCESS DEGs
+
+
 sig <- which(myresults$padj < my_alpha)
 
 # check if there are significant DEGs to plot
@@ -447,20 +464,6 @@ if(length(sig) > 1)
 } else {
     cat("\nNo DEGs to process!\n")
 }
-
-
-#sort according to adjusted p-value and write results to file
-myresultsOrdered <- myresults[order(myresults$padj),]
-write.table(
-        myresultsOrdered,
-        sep="\t",
-        file=paste(output_prefix,".txt",sep=""))
-
-#print summary of deg analysis
-sink(paste(output_prefix,"_summary.txt",sep=""))
-summary(myresults)
-sink()
-
 
 
 ###########################################################################################
