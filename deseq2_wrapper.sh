@@ -1,5 +1,6 @@
 #!/bin/bash
-
+set -e
+set -u
 
 # $1 = input file for DESeq2, tsv file specifying at least columms fileName, sampleName and the condition to test on
 # $2 = design for testing with DESeq2 (must match column names in $1), for example: "~ condition" or "~ patient + condition"
@@ -28,46 +29,53 @@ ENTREZ=${7:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
 # if it does not, create it now
 if [ ! -e "${BIOMART%.gtf}_geneIDtoSymbol.txt" ]
 then
-	cat "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z]\+_[a-z]\+//g' -e 's/;/\t/' -e 's/"//g' -e 's/ //g' | grep -v 'level' | sort -k1,1b | uniq > ${BIOMART%.gtf}_geneIDtoSymbol.txt
+    cat "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z]\+_[a-z]\+//g' -e 's/;/\t/' -e 's/"//g' -e 's/ //g' | grep -v 'level' | sort -k1,1b | uniq > ${BIOMART%.gtf}_geneIDtoSymbol.txt
 fi
 
 
 # RUN DESEQ2 SCRIPT
 # -> use the script in the same folder as this script
 Rscript "$(dirname $0)/deseq2.R" "$IN" "$DESIGN" "$REFERENCE_LEVEL" "$ALPHA" "$LFC" "$OUT_PREFIX"
+echo ""
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
-for COUNTS in "${OUT_PREFIX}_CountsNormalized.txt" "${OUT_PREFIX}_CountsNormalizedTransformed.txt" "${OUT_PREFIX}_CountsNormalizedTransformed_degs.txt"
+for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}_countsNormalized.txt" "${OUT_PREFIX}_countsNormalizedTransformed.txt" "${OUT_PREFIX}_countsNormalizedTransformed_degs.txt"
 do
-  # define output file name for annotated file
-  NEW_FILE=$(echo $COUNTS | sed 's/CountsNormalized/countsNormalized/')
+    # continue only if the file exists
+    # --> abort, if there are no DEGs to process
+    ([ -f "$FILE" ] && [ "$(grep -c '^ENS' "$FILE")" -gt 0 ]) || continue
+    echo "Annotating gene symbols for $FILE"
 
-  # add header
-  echo -n 'geneID	geneSymbol	' > $NEW_FILE
-  head -n 1 "$COUNTS" | sed -e 's/"//g' >> $NEW_FILE
-  
-  # add annotated gene counts
-  join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") <(sort -k1,1b "$COUNTS" | sed -e 's/"//g' -e 's/\.[0-9]*//') >> $NEW_FILE
+    # define output file name for annotated file
+    ANNOTATED=${FILE%.txt}_annotated.txt
+
+    # add header
+    echo -ne 'geneID\tgeneSymbol\t' > $ANNOTATED
+    head -n 1 "$FILE" | sed -e 's/"//g' >> $ANNOTATED
+
+    # add and annotated the file
+    join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") <(tail -n +2 "$FILE" | sort -k1,1b | sed -e 's/"//g' -e 's/\.[0-9]*//') >> $ANNOTATED
+
+    if [ "$(wc -l "$FILE" | cut -f1 -d' ')" -eq "$(wc -l "$ANNOTATED" | cut -f1 -d' ')" ]
+    then
+        mv "$ANNOTATED" "$FILE"
+    else
+        echo "not all features could be annotated - keeping original file"
+    fi
 done
 
 
-# ANNOTATE DESEQ2 RESULTS with gene symbols
-tail -n +2 ${OUT_PREFIX}.txt | sort > ${OUT_PREFIX}_sorted.txt
-sed -i 's/"//g' ${OUT_PREFIX}_sorted.txt
+# save separate DESeq2 output file with defined p-values only
+for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}_annotated.txt"
+do
+    [ -f "$FILE" ] || continue
+    grep -wv 'NA' "$FILE" >  "${FILE%.txt}_woutNA.txt"
+done
 
-echo -n 'geneID	geneSymbol	' > ${OUT_PREFIX}_annotated.txt
-head -n 1 ${OUT_PREFIX}.txt | sed -e 's/"//g' >> ${OUT_PREFIX}_annotated.txt
-join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") ${OUT_PREFIX}_sorted.txt >> ${OUT_PREFIX}_annotated.txt
-
-#sort -g -k 7,7 ${OUT_PREFIX}_annotated.txt > ${OUT_PREFIX}_sorted.txt
-grep -wv 'NA' ${OUT_PREFIX}_annotated.txt >  ${OUT_PREFIX}_annotated_woutNA.txt
 
 # ANNOTATE with entrez gene IDs as well (for SPIA)
-join -t '	' <( tail -n +2 ${OUT_PREFIX}_annotated_woutNA.txt) <(tail -n +2 $ENTREZ) > ${OUT_PREFIX}_annotated_woutNA_wEntrezIDs.txt
-
-
-#rm ${OUT_PREFIX}_annotated.txt
-rm -f ${OUT_PREFIX}_sorted.txt
-rm -f ${OUT_PREFIX}_CountsNormalized*.txt
-#rm -f ${OUT_PREFIX}.txt
+#if [ -f "${OUT_PREFIX}_annotated_woutNA.txt" ]
+#then
+#    join -t '	' <( tail -n +2 ${OUT_PREFIX}_annotated_woutNA.txt) <(tail -n +2 $ENTREZ) > ${OUT_PREFIX}_annotated_woutNA_wEntrezIDs.txt
+#fi

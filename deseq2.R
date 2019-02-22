@@ -108,16 +108,18 @@ counts <- counts(mydds,normalized=TRUE)
 write.table(
         counts,
         sep="\t",
-        file=paste(output_prefix,"_CountsNormalized.txt", sep=""))
+        quote=FALSE,
+        file=paste(output_prefix,"_countsNormalized.txt", sep=""))
 
 # get transformed read counts
 trans <- rlog(mydds)
-save(trans, file=paste(output_prefix,"_trans.RData", sep=""))
+#save(trans, file=paste(output_prefix,"_trans.RData", sep=""))
 #load(file=paste(output_prefix,"_trans.RData", sep=""))
 write.table(
         assay(trans),
         sep="\t",
-        file=paste(output_prefix,"_CountsNormalizedTransformed.txt", sep=""))
+        quote=FALSE,
+        file=paste(output_prefix,"_countsNormalizedTransformed.txt", sep=""))
 
 
 # calculate coefficient of variation
@@ -153,7 +155,11 @@ my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, re
     rv <- rowVars(assay(object))
     select <- order(rv, decreasing = TRUE)[seq_len(min(ntop, length(rv)))]
     pca <- prcomp(t(assay(object)[select, ]))
-    write.table(pca["rotation"], file=paste(output_prefix, "_pca.txt", sep=""), sep="\t")
+    write.table(
+            pca["rotation"],
+            sep="\t",
+            quote=FALSE,
+            file=paste(output_prefix, "_pca.txt", sep=""))
     percentVar <- pca$sdev^2/sum(pca$sdev^2)
 
     if (!all(intgroup %in% names(colData(object)))) {
@@ -353,6 +359,7 @@ myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThres
 write.table(
         myresults[order(myresults$padj),],
         sep="\t",
+        quote=FALSE,
         file=paste(output_prefix,".txt",sep=""))
 
 # print summary of deg analysis
@@ -376,7 +383,8 @@ if(length(sig) > 1)
     write.table(
             sigCounts,
             sep="\t",
-            file=paste(output_prefix,"_CountsNormalizedTransformed_degs.txt", sep=""))
+            quote=FALSE,
+            file=paste(output_prefix,"_countsNormalizedTransformed_degs.txt", sep=""))
 
     # euclidean distances
     sig_sampleDists <- dist(t(sigCounts))
@@ -493,19 +501,3 @@ invisible(dev.off())
 sink(paste(output_prefix,"_sessionInfo.txt",sep=""))
 print(sessionInfo())
 sink()
-
-
-###########################################################################################
-###########################################################################################
-## FIX ANNO
-
-# to convert ENSEMBL gene ids to gene symbols later, I have to remove the decimal now
-rownames(myresultsOrdered) <- unlist(strsplit(rownames(myresultsOrdered), split='\\.'))[2*(1:length(rownames(myresultsOrdered)))-1]
-
-# rewrite deg analysis results to file
-# -> overwrite if decimal removal was successful (will fail for Susi's circRNAs) and keep existing version otherwise
-write.table(
-        myresultsOrdered,
-        sep="\t",
-        file=paste(output_prefix,".txt",sep=""))
-
