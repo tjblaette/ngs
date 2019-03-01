@@ -594,7 +594,7 @@ filterOutput = {
 }
 
 cleanUp = {
-    exec "bpipe_finish.sh"
+    exec "bpipe_finish.sh $input1.fastq.prefix"
 }
 
 
