@@ -45,7 +45,8 @@ trim_haloplexC = {
 }
 
 cutadapt = {
-    exec "$CUTADAPT -m 50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -o $output1.fastq -p $output2.fastq   $input1.fastq   $input2.fastq"
+    var nkern : 24
+    exec "$CUTADAPT --cores=$nkern -m 50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -o $output1.fastq -p $output2.fastq $input1.fastq $input2.fastq"
 }
 
 
