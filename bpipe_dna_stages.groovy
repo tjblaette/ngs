@@ -50,28 +50,6 @@ cutadapt = {
 }
 
 
-alignSAMPE = { //it is not recommended to use this stage -> use alignMEM instead
-    var nkern : 24 
-    output.dir="intermediate_files"
-    exec "$BWA aln -t $nkern $REF $input1.fastq > $output1.sai"
-    exec "$BWA aln -t $nkern $REF $input2.fastq > $output2.sai"
-    exec """$BWA sampe -P 
-            -r "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
-            $REF 
-            $output1.sai 
-            $output2.sai 
-            $input1.fastq 
-            $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' | $PICARD SortSam
-        						INPUT=/dev/stdin
-        						OUTPUT=$output.bam
-        						CREATE_INDEX=true
-                					SORT_ORDER=coordinate"""
-}
-
-
 alignMEM = {
     //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
     var nkern : 24 
@@ -172,15 +150,18 @@ sortPIC = {
 
 indexPIC = {
     output.dir="intermediate_files"
-    exec """$PICARD BuildBamIndex 
-        INPUT=$input.bam"""
+    transform("bam") to ("bai") {
+        exec """$PICARD BuildBamIndex
+            INPUT=$input.bam"""
+    }
 }
 
 
 idxstatPIC = {
     output.dir="intermediate_files"
     exec """$PICARD BamIndexStats
-        INPUT=$input.bam"""
+        INPUT=$input.bam > $output.tsv"""
+    forward input.bam
 }
 
 
@@ -499,79 +480,150 @@ haloplex = segment {
 }
 
 processVARSC = {
-    exec "$VARSCAN processSomatic $input"
-    exec "rm -f results_varscan/*.hc"
-    forward(glob("results_varscan/*somVARSC{unpaired.,.}*.*"))
-}
-
-// processSomatic creates output with variant type as file extension -> bpipe would remove these in the subsequent stage's output file names -> to prevent this, I add a dummy file extension with this stage
-dummy = {
-    output.dir="results_varscan"
-    produce("${input}.dummy"){
-    exec "cp $input $output"
+    produce(input + ".Germline", input + ".LOH", input + ".Somatic") {
+        exec """$VARSCAN processSomatic $input
+        &&
+        rm -f results_varscan/*.hc"""
     }
 }
 
-doublePos = {
+
+fixFormat = {
     output.dir="intermediate_files"
-    // delete header and fix indel ref and alt alleles to match annovar input specifications
-    exec """sed -i -e '1d' -e 's/^\\([^\t]*\t[^\t]*\t\\).[^\t]*\t+\\([^\t]*\\)/\\1-\t\\2/' $input"""
+    produce(input + ".fixFormat.pre_rwrt", input + ".fixFormat.rwrt", input + ".fixFormat.fixed") {
+        // delete header and fix indel ref and alt alleles to match annovar input specifications
+        exec """sed
+            -e '1d'
+            -e 's/^\\([^\t]*\t[^\t]*\t\\).[^\t]*\t+\\([^\t]*\\)/\\1-\t\\2/'
+            -e '0,/chr.*\$/{s/chr.*\$/&\\n&/}'
+                $input  > $output.pre_rwrt"""
+        exec "${NGS}/snp_rwrt/snp_rwrt $output.pre_rwrt $output.rwrt"
 
-    exec """sed -e '0,/chr.*\$/{s/chr.*\$/&\\n&/}' $input > $output.pre_rwrt"""
-    exec "${NGS}/snp_rwrt/snp_rwrt $output.pre_rwrt $output.rwrt"
-    exec """sed -e '1d' $output.rwrt > $output.rwrt_sed"""
-
-    // fix del coords:
-    exec """awk -v OFS="\t" 'substr(\$5,1,1) == "-" {\$2=\$2+1; \$3=\$3+length(\$5)-1; \$4=substr(\$5,2,length(\$5)); \$5="-"; print \$0} substr(\$5,1,1) != "-" {print \$0}' $output.rwrt_sed > $output.fixed"""
+        // fix del coords:
+        exec """
+            tail -n +2 $output.rwrt |
+            awk -v OFS="\t" 'substr(\$5,1,1) == "-" {\$2=\$2+1; \$3=\$3+length(\$5)-1; \$4=substr(\$5,2,length(\$5)); \$5="-"; print \$0} substr(\$5,1,1) != "-" {print \$0}' > $output.fixed"""
+    }
     forward """$output.fixed"""
 }
 
 
 tableANNOVAR = {
-    produce("${input}.hg19_multianno.csv"){
-    exec """${ANNOVAR}/table_annovar.pl $input ${ANNOVAR}/humandb/ -buildver hg19 -out $input -remove -protocol refGene,genomicSuperDups,esp6500_all,1000g2014sep_all,snp138,cosmic70,ljb23_pp2hdiv,ljb23_sift -operation g,r,f,f,f,f,f,f -nastring '"."' -csvout -otherinfo"""
+    produce(input + ".hg19_multianno.csv"){
+        exec """${ANNOVAR}/table_annovar.pl $input
+            ${ANNOVAR}/humandb/
+            -buildver hg19
+            -out $input
+            -remove
+            -protocol refGene,genomicSuperDups,esp6500_all,1000g2014sep_all,snp138,cosmic70,ljb23_pp2hdiv,ljb23_sift
+            -operation g,r,f,f,f,f,f,f
+            -nastring '"."'
+            -csvout
+            -otherinfo"""
     }
 }
 
 
 tableANNOVARmm10 = {
-    produce("${input}.mm10_multianno.csv"){
-    exec """${ANNOVAR}/table_annovar.pl $input ${ANNOVAR}/mm10db/ -buildver mm10 -out $input -remove -protocol refGene,genomicSuperDups,snp138 -operation g,r,f -nastring '"."' -csvout -otherinfo"""
+    produce(input + ".mm10_multianno.csv") {
+        exec """${ANNOVAR}/table_annovar.pl $input
+            ${ANNOVAR}/mm10db/
+            -buildver mm10
+            -out $input
+            -remove
+            -protocol refGene,genomicSuperDups,snp138
+            -operation g,r,f
+            -nastring '"."'
+            -csvout
+            -otherinfo"""
     }
 }
 
 
 merged = {
     output.dir="results_csv"
-    exec "head -n 1 intermediate_files/*snp.Somatic.*.csv > results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
-    exec "tail -n +2 intermediate_files/*.csv >> results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
-    exec """sed -i -e '/^\$/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
-    exec """sed -i -e '/^==>/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
-    forward(glob("results_csv/*merged.csv"))
+    from("*multianno.csv") produce(input1.fastq.prefix + "_merged.csv") {
+        exec """
+            head -n 1 --quiet $inputs |
+            uniq |
+            sed -e 's/\t"\$//'
+                -e 's/,"/\t/g'
+                -e 's/"//g'
+                -e 's/,/\t/4'
+                -e 's/,/\t/3'
+                -e 's/,/\t/2'
+                -e 's/,/\t/1'
+                -e 's/,/;/g'
+                -e 's/\t/","/g'
+                -e 's/^/"/'
+                -e 's/\$/"/'
+                -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus/'
+                -e '1s/;/","/g' > $output
+            &&
+            tail -n +2 --quiet $inputs |
+            sed -e 's/\t"\$//'
+                -e 's/,"/\t/g'
+                -e 's/"//g'
+                -e 's/,/\t/4'
+                -e 's/,/\t/3'
+                -e 's/,/\t/2'
+                -e 's/,/\t/1'
+                -e 's/,/;/g'
+                -e 's/\t/","/g'
+                -e 's/^/"/'
+                -e 's/\$/"/' >> $output"""
+    }
 }
 
-// could not manage forward with basename -> added subsequent stages to this one
-// -> leave for other pipelines as separate stages to allow different subsequent stages
 mergedAmplicon = {
     output.dir="results_csv"
+    produce(input.split("/")[-1].split("R")[0] + "merged.csv") {
+        exec """
+            head -n 1 --quiet $inputs |
+            uniq |
+            sed -e 's/\t"\$//'
+                -e 's/,"/\t/g'
+                -e 's/"//g'
+                -e 's/,/\t/4'
+                -e 's/,/\t/3'
+                -e 's/,/\t/2'
+                -e 's/,/\t/1'
+                -e 's/,/;/g'
+                -e 's/\t/","/g'
+                -e 's/^/"/'
+                -e 's/\$/"/'
+                -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus/'
+                -e '1s/;/","/g' > $output
+            &&
+            tail -n +2 --quiet $inputs |
+            sed -e 's/\t"\$//'
+                -e 's/,"/\t/g'
+                -e 's/"//g'
+                -e 's/,/\t/4'
+                -e 's/,/\t/3'
+                -e 's/,/\t/2'
+                -e 's/,/\t/1'
+                -e 's/,/;/g'
+                -e 's/\t/","/g'
+                -e 's/^/"/'
+                -e 's/\$/"/' >> $output"""
+    }
+}
+
+
+filterOutput = {
     var candidates : CANDIDATES
-    exec "head -n 1 intermediate_files/${input1.fastq.prefix}*snp.Germline.*.csv > results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
-    exec "tail -n +2 intermediate_files/${input1.fastq.prefix}*Germline.*.csv | cat >> results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"
-    exec """sed -i -e '/^\$/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
-    exec """sed -i -e '/^==>/d' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
-
-   // final_sed 
-    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus","leftFlankingSeq","rightFlankingSeq/' -e '1s/;/","/g' results_csv/\$(basename ${input1.fastq.prefix}_merged.csv)"""
-
-   // filterOutput
-   exec "echo \$(date) running $FILTER"
-   exec "$FILTER results_csv/\$(basename ${input1.fastq.prefix}_merged.csv) results_csv/\$(basename ${input1.fastq.prefix}_merged) $candidates $REF 15"
+    produce(input.prefix + "_filter_statistic.txt", input.prefix + "*.csv") {
+        exec "echo \$(date) running $FILTER"
+        exec "$FILTER $input $input.prefix $candidates $REF 15"
+    }
 }
 
 
-final_sed = {
-    exec """ sed -i -e 's/\t"\$//' -e 's/,"/\t/g' -e 's/"//g' -e 's/,/\t/4' -e 's/,/\t/3' -e 's/,/\t/2' -e 's/,/\t/1' -e 's/,/;/g' -e 's/\t/","/g' -e 's/^/"/' -e 's/\$/"/' -e 's/Otherinfo/normal_reads1","normal_reads2","normal_var_freq","normal_gt","tumor_reads1","tumor_reads2","tumor_var_freq","tumor_gt","somatic_status","variant_p_value","somatic_p_value","tumor_reads1_plus","tumor_reads1_minus","tumor_reads2_plus","tumor_reads2_minus","normal_reads1_plus","normal_reads1_minus","normal_reads2_plus","normal_reads2_minus","leftFlankingSeq","rightFlankingSeq/' -e '1s/;/","/g'  $input"""
+cleanUp = {
+    exec "bpipe_finish.sh \$(basename $input)"
 }
+
 
 
 finalSedPINDEL = {
@@ -586,15 +638,3 @@ finalSedPINDEL = {
 finalSedPLATYPUS = {
     exec """paste  -d ',' <(cut -d',' -f1-5 $input.csv)  <(cut -d',' -f6- $input.csv | sed -e 's/,"/\t/g' -e 's/"//g' -e 's/,/;/g' -e 's/\t/,/g' | cut -d',' -f1-12) <(cut -f1 $input.csv | sed 's/^.*,\\([^,]*\\)\$/\\1/') <(cut -f2-7 $input.csv | sed -e 's/\t/,/g')  <(cut -f8 $input.csv | sed -e 's/;/\t/g' -e 's/,/;/g' -e 's/\t/,/g') <(cut -f9 $input.csv) <(cut -f10 $input.csv | sed -e 's/,/;/g' -e 's/:/,/g') | sed -e 's/^/"/' -e 's/,/","/g' -e 's/""/"/g' | sed '1 s/^.*\$/"Chr","Start","End","Ref","Alt","Func.refGene","Gene.refGene","GeneDetail.refGene","ExonicFunc.refGene","AAChange.refGene","genomicSuperDups","esp6500_all","1000g2014sep_all","snp138","cosmic70","ljb23_pp2hdiv","ljb23_sift","chr1","pos","NA","ref","alt",,"PASS","Fraction of reads around this variant that failed filters","Estimated population frequency of variant","Homopolymer run length around variant locus","Haplotype score measuring the number of haplotypes the variant is segregating into in a window","Worst goodness-of-fit value reported across all samples","Median minimum base quality for bases around variant","Root mean square of mapping qualities of reads at the variant position","tumor_reads_2plus|Total number of forward reads containing this variant","Total number of reverse reads tumor_reads_2_minuscontaining this variant","Posterior probability (phred scaled) that this variant segregates","Variant-quality|read-depth for this variant","Variants fail sequence-context filter. Surrounding sequence is low-complexity","Binomial P-value for strand bias test","Sourse_of_variants","Total coverage at this locus","Total forward strand coverage at this locus","Total reverse strand coverage at this locus","Total number of reads containing this variant","End position of calling window","Starting position of calling window","description","Genotype","Genotype log10-likelihoods for AA;AB and BB genotypes; where A = ref and B = variant","Variant fails goodness-of-fit test","Genotype quality as phred score","Number of reads covering variant location in this sample","Number of reads containing variant in this sample"/' > $output.csv"""
 }
-
-filterOutput = {
-      var candidates : CANDIDATES
-      exec "echo \$(date) running $FILTER"
-      exec "$FILTER $input.csv $input.csv.prefix $candidates $REF 15"
-}
-
-cleanUp = {
-    exec "bpipe_finish.sh $input1.fastq.prefix"
-}
-
-

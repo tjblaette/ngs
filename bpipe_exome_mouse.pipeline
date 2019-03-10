@@ -1,4 +1,4 @@
-//file containing Bpipe call for MOUSE pipeline
+//file containing Bpipe call for MOUSE WES pipeline
 
 
 // LOAD STAGES
@@ -12,9 +12,9 @@ Bpipe.run {
 	"%_R*.fastq" * [ qc ] +
 	"%_R*.fastq" * [ runEXOME_VARSCAN_mouse ] + somVARSC + 
 	"*.somVARSC.%" * [ processVARSC ] +
-	"*.somVARSC.%.%" * [ dummy + doublePos ] + 
+	"*.somVARSC.%.%" * [ fixFormat ] + 
 	"%.fixed" * [ tableANNOVARmm10 ] + merged + 
-	"*R1%merged.csv" * [ final_sed + filterOutput ] +
-        cleanUp
+	"*R1%merged.csv" * [ filterOutput ] +
+        "%_R*.fastq" * [ cleanUp ]
 }
 

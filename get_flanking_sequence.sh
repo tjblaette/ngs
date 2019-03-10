@@ -104,8 +104,7 @@ fi
 
 }
 
-head -n 1 $1 > ${1}_tmp
-sed -i 's/?$/,left_flanking_seq,right_flanking_seq/' ${1}_tmp
+head -n 1 $1 | sed -e 's/?$/,left_flanking_seq,right_flanking_seq/' > ${1}_tmp
 
 tail -n +2 $1 | while read line
 do

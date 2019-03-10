@@ -13,9 +13,9 @@ Bpipe.run {
 	"%_R*.fastq" * [ qc ] +
 	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSC + 
 	"*.somVARSC.%" * [ processVARSC ] + 
-	"*.somVARSC.%.%" * [ dummy + doublePos ] + 
+	"*.somVARSC.%.%" * [ fixFormat ] +
 	"%.fixed" * [  tableANNOVAR ]  + merged + 
-	"*R1%merged.csv" * [ final_sed + filterOutput ] +
-        cleanUp
+	"*R1%merged.csv" * [ filterOutput ] +
+        "%_R*.fastq" * [ cleanUp ]
 }
 

@@ -13,9 +13,11 @@ Bpipe.run {
 	"%_R*.fastq" * [ qc ] +
         "%_R*.fastq" * [ haloplex ] + 
         "%somVARSCunpaired.%" * [ processVARSC ] +
-        "%somVARSCunpaired.%.%" * [ dummy + doublePos ] +
-        "*%.fixed" * [  tableANNOVAR ] +
-        "%_R*.fastq" * [ mergedAmplicon ] +
-        cleanUp
+        "%somVARSCunpaired.%.%" * [ fixFormat ] +
+        "*%.fixed" * [
+                tableANNOVAR +
+                "%somVARSCunpaired.*" * [ mergedAmplicon + filterOutput ]
+                ] +
+        "%_R*.fastq" * [ cleanUp ]
 }
 
