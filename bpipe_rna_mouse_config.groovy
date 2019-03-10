@@ -1,8 +1,6 @@
 //file to contain pipeline configuration of RNA-seq pipeline for mouse
 
 
-// VARIANT FILTER SCRIPT
-//FILTER="filter_exome_wFlankingSeq.sh"
 
 // KNOWN SEQUENCES
 REF="${NGS}/refgenome/mm10/mm10_reordered.fa"

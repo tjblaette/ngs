@@ -2,7 +2,7 @@
 
 
 // VARIANT FILTER SCRIPT
-FILTER="filter_amplicon_wFlankingSeq.sh"
+FILTER="filter_amplicon.sh"
 
 // KNOWN SEQUENCES
 REF="${NGS}/refgenome/GATK/ucsc.hg19.fasta" //also includes unplaced/unlocalized contigs and alternative haplotypes

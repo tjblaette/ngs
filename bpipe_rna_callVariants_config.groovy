@@ -2,7 +2,7 @@
 
 
 // VARIANT FILTER SCRIPT
-FILTER="filter_exome_wFlankingSeq.sh"
+FILTER="filter_exome.sh"
 CANDIDATES="${NGS}/known_sites/candidate_genes_aml.txt"
 
 // KNOWN SEQUENCES

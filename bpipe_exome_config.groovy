@@ -2,7 +2,7 @@
 
 
 // VARIANT FILTER SCRIPT
-FILTER="filter_exome_wFlankingSeq.sh"
+FILTER="filter_exome.sh"
 
 // KNOWN SEQUENCES
 REF="${NGS}/refgenome/GATK/ucsc.hg19.fasta" //also includes unplaced/unlocalized contigs and alternative haplotypes
