@@ -377,7 +377,7 @@ sink()
 sig <- which(myresults$padj < my_alpha)
 
 # check if there are significant DEGs to plot
-if(length(sig) > 1)
+if(length(sig) >= 1)
 {
     sigCounts <- assay(trans)[sig, ]
     write.table(
@@ -386,79 +386,82 @@ if(length(sig) > 1)
             quote=FALSE,
             file=paste(output_prefix,"_countsNormalizedTransformed_degs.txt", sep=""))
 
-    # euclidean distances
-    sig_sampleDists <- dist(t(sigCounts))
-    sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
+    if (length(sig) > 1) {
+        # euclidean distances
+        sig_sampleDists <- dist(t(sigCounts))
+        sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
 
-    # plot PCAs, again color-coding each of the annotations separately
-    cat("\nPrinting DEG PCA and clusters...\n")
-    pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
-    for (col in cols)
-    {
-        if (length(sig) >= 2) {
-            print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+        # plot PCAs, again color-coding each of the annotations separately
+        cat("\nPrinting DEG PCA and clusters...\n")
+        pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
+        for (col in cols)
+        {
+            if (length(sig) >= 2) {
+                print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+            }
+            if (length(sig) >= 4) {
+                print(my_plotPCA(trans[sig, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+            }
+            if (length(sig) >= 6) {
+                print(my_plotPCA(trans[sig, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
+            }
         }
-        if (length(sig) >= 4) {
-            print(my_plotPCA(trans[sig, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
-        }
-        if (length(sig) >= 6) {
-            print(my_plotPCA(trans[sig, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
-        }
-    }
 
-    #  if (length(cols) > 1)
-    #  {
-    #    #sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
-    #    #print(sig_pca_full)
-    #    print(my_plotPCA(trans[sig, ], cols, 1, 2, "PC1: ", "PC2: "))
-    #    print(my_plotPCA(trans[sig, ], cols, 3, 4, "PC3: ", "PC4: "))
-    #    print(my_plotPCA(trans[sig, ], cols, 5, 6, "PC5: ", "PC6: "))
-    #  }
+        #  if (length(cols) > 1)
+        #  {
+        #    #sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
+        #    #print(sig_pca_full)
+        #    print(my_plotPCA(trans[sig, ], cols, 1, 2, "PC1: ", "PC2: "))
+        #    print(my_plotPCA(trans[sig, ], cols, 3, 4, "PC3: ", "PC4: "))
+        #    print(my_plotPCA(trans[sig, ], cols, 5, 6, "PC5: ", "PC6: "))
+        #  }
 
-    # plot the same heatmaps as above, now for DEGs only
-    pheatmap(
-            sigCounts,
-            annotation_col=df,
-            annotation_color=anno_colors,
-            clustering_distance_cols=sig_sampleDists,
-            main="Clustered by Euclidean distance of DEGs",
-            scale="row",
-            show_rownames=length(sig)<=50,
-            treeheight_row=0,
-            fontsize=5,
-            border_color=NA)
-
-    # pearson correlation distances (taken from pheatmap source code)
-    # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
-    # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
-    if (sum(apply(sigCounts, 2, sd) == 0) > 0) {
-        cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
-    } else {
-        sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
+        # plot the same heatmaps as above, now for DEGs only
         pheatmap(
                 sigCounts,
                 annotation_col=df,
                 annotation_color=anno_colors,
-                clustering_distance_cols=sig_sampleDists_corr,
-                main="Clustered by Pearson correlation of DEGs",
+                clustering_distance_cols=sig_sampleDists,
+                main="Clustered by Euclidean distance of DEGs",
                 scale="row",
                 show_rownames=length(sig)<=50,
                 treeheight_row=0,
                 fontsize=5,
                 border_color=NA)
-    }
 
-    pheatmap(
-            sig_sampleDistMatrix,
-            annotation_col=df,
-            annotation_color=anno_colors,
-            clustering_distance_rows=sig_sampleDists,
-            clustering_distance_cols=sig_sampleDists,
-            main="Euclidean inter-sample distance based on DEGs",
-            fontsize=5,
-            border_color=NA)
-    cat("done\n")
-    invisible(dev.off())
+        # pearson correlation distances (taken from pheatmap source code)
+        # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
+        # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
+        if (sum(apply(sigCounts, 2, sd) == 0) > 0) {
+            cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
+        } else {
+            sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
+            pheatmap(
+                    sigCounts,
+                    annotation_col=df,
+                    annotation_color=anno_colors,
+                    clustering_distance_cols=sig_sampleDists_corr,
+                    main="Clustered by Pearson correlation of DEGs",
+                    scale="row",
+                    show_rownames=length(sig)<=50,
+                    treeheight_row=0,
+                    fontsize=5,
+                    border_color=NA)
+        }
+
+        print("heatmap sampleDistances")
+        pheatmap(
+                sig_sampleDistMatrix,
+                annotation_col=df,
+                annotation_color=anno_colors,
+                clustering_distance_rows=sig_sampleDists,
+                clustering_distance_cols=sig_sampleDists,
+                main="Euclidean inter-sample distance based on DEGs",
+                fontsize=5,
+                border_color=NA)
+        cat("done\n")
+        invisible(dev.off())
+    }
 
     # plot DEG counts
     cat("\nPrinting DEG counts...\n")
