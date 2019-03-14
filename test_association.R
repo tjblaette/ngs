@@ -12,6 +12,7 @@ attribute <- args[4] #"TP53del"
 counts <- read.table(
         normalized_counts_filename, 
         header=1, 
+        check.names=FALSE,
         row.names=1)
 
 gene_symbol <- counts$geneSymbol
@@ -20,6 +21,7 @@ counts <- counts[,-1]
 anno <- read.table(
         annotation_filename, 
         header=1,
+        check.names=FALSE,
         row.names=1)
 
 
