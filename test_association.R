@@ -24,6 +24,7 @@ anno <- read.table(
         check.names=FALSE,
         row.names=1)
 
+counts <- counts[,rownames(anno)]
 
 gene_median <- median(t(counts[which(gene_symbol == gene),]))
 
