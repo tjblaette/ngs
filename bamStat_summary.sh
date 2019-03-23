@@ -12,11 +12,11 @@
 #
 # Args:
 #   DIR: Name of / Path to the folder to
-#        collect Picard files from.
+#       collect Picard files from.
 #
 # Output:
 #   $DIR/bamStat_summary.tsv: containing all
-#        of the collected and merged statistics.
+#       of the collected and merged statistics.
 #
 ####
 
