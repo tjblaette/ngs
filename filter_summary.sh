@@ -23,18 +23,40 @@
 
 
 DIR=${1:-'.'}
+IN="*_filter_statistic.txt"
 OUT="${DIR}/filter_summary.tsv"
 
+# test whether DIR exists, abort if it does not
+if [ ! -d "$DIR" ]
+then
+    echo "Directory \"${DIR}\" not found"
+    echo "Aborting!"
+    exit
+fi
 
-# insert header
-echo -e "File name\tTotal calls\tExonic/Splicing\tNonsynonymous\tPassed dbSNP/COSMIC-filter\tAML candidate genes" > "$OUT"
+# test whether DIR contains stat files, abort it it does not
+if [ -n "$(find "$DIR" -maxdepth 1 -path $IN -type f)" ]
+then
+    echo "Processing stat files in \"${DIR}\""
+    echo "Procesing..."
+    echo ""
 
-# extract variant filtering statistics from all *stat*-files in $DIR
-for file in ${DIR}/*_filter_statistic.txt
-do
+    # insert header
+    echo -e "File name\tTotal calls\tExonic/Splicing\tNonsynonymous\tPassed dbSNP/COSMIC-filter\tAML candidate genes" > "$OUT"
+
+    # extract variant filtering statistics from all *stat*-files in $DIR
+    for file in ${DIR}/${IN}
+    do
+        echo "$(basename "$file")"
         echo -ne "$(basename ${file%_merged_filter_statistic.txt})\t" >> "$OUT" #file name
         grep 'total' "$file" | sed 's/.*total of \(.*\) calls.*/\1/g' | tr '\n' '\t' >> "$OUT" #total calls
         grep 'total' "$file" | sed 's/\(.*\) out of.*/\1/g' | tr '\n' '\t' >> "$OUT" #exonic/splicing variants in total
         grep 'remain' "$file" | sed 's/\(.*\) calls.*/\1/g' | tr '\n' '\t' >> "$OUT" #calls remaining after removal of synonymous variants and those failing dbSNP/COSMIC-filter
         grep 'candidate' "$file" | sed 's/\(.*\) calls.*/\1/g' >> "$OUT" #calls affecting AML candidate genes
-done
+    done
+    echo ""
+    echo "Done!"
+else
+    echo "No stat files found in \"${DIR}\""
+    echo "Aborting!"
+fi
