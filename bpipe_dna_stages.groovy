@@ -199,7 +199,7 @@ unmarkDupsPIC = {
 dedupBarcode = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
-    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover"
+    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover -stats $output.stats"
 }
 
 coverBED = {
