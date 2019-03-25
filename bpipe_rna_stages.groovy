@@ -3,7 +3,6 @@
 //// COMMON VARIABLE DEFINITIONS
 // PROGRAM DIRECTORIES
 STAR="star"
-STAR_LONG="/NGS/star_long/source/STARlong"
 
 
 qc = {
@@ -36,39 +35,6 @@ alignSTAR = {
                 --readFilesIn  $input1.fastq $input2.fastq > $output.bam"""
 }
 
-
-alignSTARlong = {
-        var nkern : 48 
-        output.dir="intermediate_files"
-	//	--quantMode GeneCounts
-	//	--chimSegmentMin 15   
-    	//	--chimJunctionOverhangMin 15
-        //        --twopassMode Basic
-        exec """$STAR_LONG
-                --runThreadN $nkern
-                --genomeDir $REFDIR 
-                --outStd BAM_SortedByCoordinate
-                --outSAMtype BAM SortedByCoordinate
-                --outFileNamePrefix ./.$input.fastq.prefix
-                --outSAMunmapped Within
-                --outSAMmapqUnique 60 
-                --outSAMattrRGline ID:0 PL:ILLUMINA LB:rna SM:$input.fastq.prefix
-                --outSAMstrandField intronMotif 
-                --outSAMattributes NH HI AS nM NM
-		--outFilterMultimapScoreRange 20   
-		--outFilterScoreMinOverLread 0  
-		--outFilterMatchNminOverLread 0.66   
-		--outFilterMismatchNmax 1000   
-		--winAnchorMultimapNmax 200   
-		--seedSearchLmax 12   
-		--seedSearchStartLmax 12   
-		--seedPerReadNmax 100000   
-		--seedPerWindowNmax 100   
-		--alignTranscriptsPerReadNmax 100000   
-		--alignTranscriptsPerWindowNmax 10000
-		--alignIntronMax 1
-                --readFilesIn  $input.fastq > $output.bam"""
-}
 
 addrgPIC = {
         output.dir="intermediate_files"
