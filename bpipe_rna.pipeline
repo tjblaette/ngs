@@ -1,4 +1,4 @@
-//file containing Bpipe call for WES pipeline
+//file containing Bpipe call for RNA expression pipeline
 
 
 // LOAD STAGES
@@ -12,8 +12,8 @@ load 'bpipe_rna_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-	"%_R*.fastq" * [ alignSTAR + dedupOptPIC + unmarkDupsPIC + idxstatPIC ] +
-        "%.unmarkDupsPIC.bam" * [ countHTSeq_unstranded, countHTSeq_sameStranded, countHTSeq_otherStranded ] +
+	"%_R*.fastq" * [ alignSTAR + indexPIC + dedupOptPIC + unmarkDupsPIC ] +
+        "%.unmarkDupsPIC.bam" * [ idxstatPIC, countHTSeq_unstranded, countHTSeq_sameStranded, countHTSeq_otherStranded ] +
         cleanUp
 }
 

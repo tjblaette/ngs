@@ -154,6 +154,7 @@ indexPIC = {
         exec """$PICARD BuildBamIndex
             INPUT=$input.bam"""
     }
+    forward input.bam
 }
 
 
