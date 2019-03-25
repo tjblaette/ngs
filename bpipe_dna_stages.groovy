@@ -463,6 +463,7 @@ somVARSCunpaired = {
 amplicon = segment {
         alignMEM +
 	dedupOptPIC + unmarkDupsPIC +
+	idxstatPIC +
         realignGATK + 
         [ coverBED, mpileupSAMexact ] +
         somVARSCunpaired

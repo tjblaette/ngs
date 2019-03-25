@@ -112,6 +112,7 @@ callVariants_RNA = segment {
 	indexPIC +
         dedupPIC +
         splitNtrimGATK + 
+	idxstatPIC +
         realignGATK +
 	mpileupSAM_noBed + 
 	somVARSCunpaired 
