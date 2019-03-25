@@ -106,14 +106,3 @@ countHTSeq_otherStranded = {
         output.dir="intermediate_files"
         exec "python -m HTSeq.scripts.count $input.bam $GTF --stranded=reverse --format=bam --order=pos > $output.counts"
 }
-
-callVariants_RNA = segment {
-        alignSTAR +
-	indexPIC +
-        dedupPIC +
-        splitNtrimGATK + 
-	idxstatPIC +
-        realignGATK +
-	mpileupSAM_noBed + 
-	somVARSCunpaired 
-}

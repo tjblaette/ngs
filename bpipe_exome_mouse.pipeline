@@ -10,7 +10,12 @@ load 'bpipe_exome_mouse_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-	"%_R*.fastq" * [ runEXOME_VARSCAN_mouse ] + somVARSC + 
+	"%_R*.fastq" * [
+                            alignMEM +
+                            processPICARD +
+                            realignGATKwoutKnown +
+                            [ coverBED, mpileupSAMpad ]
+        ] + somVARSC +
 	"*.somVARSC.%" * [ processVARSC ] +
 	"*.somVARSC.%.%" * [ fixFormat ] + 
 	"%.fixed" * [ tableANNOVARmm10 ] + merged + 

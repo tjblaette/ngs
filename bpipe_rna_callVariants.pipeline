@@ -12,7 +12,16 @@ load 'bpipe_rna_callVariants_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-        "%_R*.fastq" * [ callVariants_RNA ] + 
+        "%_R*.fastq" * [
+                            alignSTAR +
+                            indexPIC +
+                            dedupPIC +
+                            splitNtrimGATK +
+                            idxstatPIC +
+                            realignGATK +
+                            mpileupSAM_noBed +
+                            somVARSCunpaired
+        ] +
         "*.somVARSCunpaired.%" * [ processVARSC ] +
         "*.somVARSCunpaired.%.%" * [ fixFormat ] +
         "%.fixed" * [  tableANNOVAR ]  + merged +

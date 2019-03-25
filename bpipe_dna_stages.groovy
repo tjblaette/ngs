@@ -375,22 +375,6 @@ haplocGATK = {
 }
 
 
-runEXOME_VARSCAN = segment {
-	alignMEM +
-	processPICARD + 
-	realignGATK +
-        [ coverBED,  mpileupSAMpad ]
-}
-
-
-runEXOME_VARSCAN_mouse = segment {
-        alignMEM +
-        processPICARD +
-        realignGATKwoutKnown +
-        [ coverBED, mpileupSAMpad ]
-}
-
-
 runEXOME_PINDEL = segment {
 	alignMEM +
 	processPICARD +
@@ -460,26 +444,6 @@ somVARSCunpaired = {
         --p-value 0.99 
         --somatic-p-value 0.05"""
 }  
-
-amplicon = segment {
-        alignMEM +
-	dedupOptPIC + unmarkDupsPIC +
-	idxstatPIC +
-        realignGATK + 
-        [ coverBED, mpileupSAMexact ] +
-        somVARSCunpaired
-}
-
-haloplex = segment {
-	trim_haloplexC +
-        alignMEMhaloplex +
-	dedupBarcode +
-	sortPIC +
-	idxstatPIC +
-        realignGATK + 
-        [ coverBED, mpileupSAMexact ] +
-        somVARSCunpaired
-}
 
 processVARSC = {
     produce(input + ".Germline", input + ".LOH", input + ".Somatic") {

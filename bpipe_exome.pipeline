@@ -11,7 +11,12 @@ load 'bpipe_exome_config.groovy'
 Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
-	"%_R*.fastq" * [ runEXOME_VARSCAN ] + somVARSC + 
+	"%_R*.fastq" * [
+                            alignMEM +
+                            processPICARD +
+                            realignGATK +
+                            [ coverBED,  mpileupSAMpad ]
+        ] + somVARSC +
 	"*.somVARSC.%" * [ processVARSC ] + 
 	"*.somVARSC.%.%" * [ fixFormat ] +
 	"%.fixed" * [  tableANNOVAR ]  + merged + 
