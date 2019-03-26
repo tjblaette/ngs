@@ -1,4 +1,4 @@
-//file to contain pipeline configuration of RNA-seq variant calling pipeline
+//file to contain pipeline configuration of RNA variant-calling pipeline
 
 
 // VARIANT FILTER SCRIPT
@@ -19,5 +19,5 @@ PHASE1_1000G_INDELS="${NGS}/known_sites/hg19/1000G_phase1.indels.hg19.sites.vcf"
 TRUSEQ="${NGS}/known_sites/hg19/TruSeq-Exome-Targeted-Regions-BED-file.bed" 
 NEXTERA="${NGS}/known_sites/hg19/nexterarapidcapture_exome_targetedregions_v1.2.bed"
 NEXTERA_EXPANDED="${NGS}/known_sites/hg19/nexterarapidcapture_expandedexome_targetedregions.bed"
-EXON_TARGET=TRUSEQ
+TARGET_REGION=TRUSEQ
 

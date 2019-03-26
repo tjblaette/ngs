@@ -168,8 +168,8 @@ dedupUmiPIC = {
 
 dedupBarcode = {
     output.dir="intermediate_files"
-    var exon_cover : EXON_TARGET
-    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input3.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover -stats $output.stats"
+    var target_region : TARGET_REGION
+    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input3.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $target_region -stats $output.stats"
 }
 
 umiToBam = {
@@ -180,8 +180,8 @@ umiToBam = {
 
 coverBED = {
     output.dir="intermediate_files"
-    var exon_cover : EXON_TARGET
-    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $exon_cover -hist -sorted -g ${REF}.genomeFile > $output.txt"
+    var target_region : TARGET_REGION
+    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $target_region -hist -sorted -g ${REF}.genomeFile > $output.txt"
     exec "grep '^all' $output.txt | sort -k2,2nr | awk -v OFS='\t' -v CUMSUM=0 -v CUMFREQ=0.0 -v TOTALONTARGET=0 '{CUMSUM=CUMSUM+\$3; CUMFREQ=(100 * CUMSUM/\$4); TOTALONTARGET=TOTALONTARGET + (\$2*\$3); print \$0,CUMSUM,CUMFREQ,TOTALONTARGET;}' | sort -k2,2n > $output.nice"
     exec "formatCoverage.sh $output.nice $input1.fastq $input2.fastq 0 1 10 15 50 100 120 200 500 1000 1500 2000 2500 > $output.summary"
     forward input.bam
@@ -254,16 +254,16 @@ bqsrGATK = {
 
 
 mpileupSAMpad = {
-    var exon_cover : EXON_TARGET
+    var target_region : TARGET_REGION
     var bqs : 25
-    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l ${exon_cover}_padded -d 1000000 $input.bam > $output.pileup"""
+    exec """$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l ${target_region}_padded -d 1000000 $input.bam > $output.pileup"""
 }
 
 //additional stage to use non-padded BED for Amplicons
 mpileupSAMexact = {
-    var exon_cover : EXON_TARGET
+    var target_region : TARGET_REGION
     var bqs : 25
-    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $exon_cover -d 1000000 $input.bam > $output.pileup"
+    exec "$SAMTOOLS mpileup -f $REF -q 1 -Q $bqs -B -l $target_region -d 1000000 $input.bam > $output.pileup"
 }
 
 //additional stage without BED for variant calling from RNA-seq

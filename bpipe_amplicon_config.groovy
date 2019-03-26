@@ -13,4 +13,4 @@ PHASE1_1000G_INDELS="${NGS}/known_sites/hg19/1000G_phase1.indels.hg19.sites.vcf"
 
 // TARGET SEQUENCES FOR COVERAGE CALC
 CELGENE="${NGS}/known_sites/hg19/Celgene_Kyle_Halo_121713_Regions_sorted.bed"
-EXON_TARGET=CELGENE
+TARGET_REGION=CELGENE

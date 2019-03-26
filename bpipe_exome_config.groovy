@@ -15,5 +15,5 @@ PHASE1_1000G_INDELS="${NGS}/known_sites/hg19/1000G_phase1.indels.hg19.sites.vcf"
 TRUSEQ="${NGS}/known_sites/hg19/TruSeq-Exome-Targeted-Regions-BED-file_sorted.bed" 
 NEXTERA="${NGS}/known_sites/hg19/nexterarapidcapture_exome_targetedregions_v1.2_sorted.bed"
 NEXTERA_EXPANDED="${NGS}/known_sites/hg19/nexterarapidcapture_expandedexome_targetedregions_sorted.bed"
-EXON_TARGET=TRUSEQ
+TARGET_REGION=TRUSEQ
 
