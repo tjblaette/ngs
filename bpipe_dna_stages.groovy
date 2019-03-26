@@ -9,6 +9,7 @@ ANNOVAR="/NGS/links/annovar"
 BEDTOOLS="/NGS/links/bedtools"
 BWA="bwa"
 CUTADAPT="cutadapt"
+FGBIO="fgbio"
 GATK="gatk"
 QC="ngsqc"
 PICARD="picard"
@@ -67,28 +68,8 @@ alignMEM = {
                                                         OUTPUT=$output.bam
                                                         CREATE_INDEX=true
                                                         SORT_ORDER=coordinate"""
-}
-
-// forward 3rd fastq = index file -> that is the only diff to alignMEM above!
-alignMEMhaloplex = {
-    //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
-    var nkern : 24
-    output.dir="intermediate_files"
-    exec """$BWA mem 
-        -M
-        -t $nkern 
-        -R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
-        $REF
-        $input1.fastq
-        $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' 
-                                -e '/^@PG/s/\t/ /5' | $PICARD SortSam
-                                                        INPUT=/dev/stdin
-                                                        OUTPUT=$output.bam
-                                                        CREATE_INDEX=true
-                                                        SORT_ORDER=coordinate"""
-      forward(output.bam, input3.fastq)
+      // forward input fastqs so that input3.fastq reaches dedupByBarcode stage for haloplexHS
+      forward(output.bam, inputs.fastq)
 }
 
 
@@ -160,28 +141,46 @@ dedupOptPIC = {
     output.dir="intermediate_files"
     exec """$PICARD MarkDuplicates
 	INPUT=$input.bam
-	OUTPUT=$output.bam
+	OUTPUT=/dev/stdout
 	REMOVE_SEQUENCING_DUPLICATES=true
-	CREATE_INDEX=true
-	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
+	CREATE_INDEX=false
+	METRICS_FILE=${output.bam.prefix}_metrics.txt  |  $PICARD RevertSam
+                                                                INPUT=/dev/stdin
+                                                                OUTPUT=$output.bam
+                                                                CREATE_INDEX=true
+                                                                SORT_ORDER=coordinate
+                                                                REMOVE_DUPLICATE_INFORMATION=true
+                                                                REMOVE_ALIGNMENT_INFORMATION=false"""
 }
 
-unmarkDupsPIC = {
+dedupUmiPIC = {
     output.dir="intermediate_files"
-    exec """$PICARD RevertSam
-        INPUT=$input.bam
-        OUTPUT=$output.bam
-        CREATE_INDEX=true
-        SORT_ORDER=coordinate
-        REMOVE_DUPLICATE_INFORMATION=true
-        REMOVE_ALIGNMENT_INFORMATION=false"""
+    exec """$PICARD MarkDuplicates
+	INPUT=$input.bam
+	OUTPUT=/dev/stdout
+	REMOVE_DUPLICATES=true
+        BARCODE_TAG="RX"
+	CREATE_INDEX=false
+	METRICS_FILE=${output.bam.prefix}_metrics.txt  |  $PICARD RevertSam
+                                                                INPUT=/dev/stdin
+                                                                OUTPUT=$output.bam
+                                                                CREATE_INDEX=true
+                                                                SORT_ORDER=coordinate
+                                                                REMOVE_DUPLICATE_INFORMATION=true
+                                                                REMOVE_ALIGNMENT_INFORMATION=false"""
 }
 
 dedupBarcode = {
     output.dir="intermediate_files"
     var exon_cover : EXON_TARGET
-    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover -stats $output.stats"
+    exec "${NGSBITS}/BamDeduplicateByBarcode -bam $input.bam -index $input3.fastq -out $output.bam -dist 1 -min_group 1 -hs_file $exon_cover -stats $output.stats"
 }
+
+umiToBam = {
+    output.dir="intermediate_files"
+    exec "$FGBIO AnnotateBamWithUmis --input $input.bam --fastq $input3.fastq --fail-fast --output $output.bam"
+}
+
 
 coverBED = {
     output.dir="intermediate_files"

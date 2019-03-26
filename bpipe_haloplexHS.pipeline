@@ -13,9 +13,9 @@ Bpipe.run {
 	"%_R*.fastq" * [ qc ] +
         "%_R*.fastq" * [
                             trim_haloplexC +
-                            alignMEMhaloplex +
-                            dedupBarcode +
-                            sortPIC +
+                            alignMEM +
+                            umiToBam +
+                            dedupUmiPIC +
                             idxstatPIC +
                             realignGATK +
                             [ coverBED, mpileupSAMexact ] +

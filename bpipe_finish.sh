@@ -26,8 +26,7 @@ rm -f ${SAMPLE}*.success
 rm -f intermediate_files/${SAMPLE}*.sam
 rm -f intermediate_files/${SAMPLE}*.alignMEM.sortPIC.ba*
 rm -f intermediate_files/${SAMPLE}*dedupPIC.ba*
-rm -f intermediate_files/${SAMPLE}*dedupOptPIC.ba*
-rm -f intermediate_files/${SAMPLE}*alignMEM*unmarkDupsPIC.ba* # final BAM for RNA pipeline, delete for DNA only (which ends on GATK realignment)
+rm -f intermediate_files/${SAMPLE}*alignMEM*dedupOptPIC.ba* # final BAM for RNA pipeline, delete for DNA only (which ends on GATK realignment)
 rm -f intermediate_files/${SAMPLE}*.coverBED_exon.txt
 rm -f intermediate_files/${SAMPLE}*otherinfo*
 rm -f results_varscan/${SAMPLE}*fixFormat*
