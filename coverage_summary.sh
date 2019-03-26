@@ -35,7 +35,7 @@ fi
 
 
 # test whether DIR contains stat files, abort it it does not
-if [ -n "$(find "$DIR" -maxdepth 1 -path $IN -type f)" ]
+if [ -n "$(find "$DIR" -maxdepth 1 -path "$IN" -type f)" ]
 then
     echo "Processing stat files in \"${DIR}\""
     echo "Procesing..."
