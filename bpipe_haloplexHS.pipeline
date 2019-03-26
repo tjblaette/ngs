@@ -12,7 +12,7 @@ Bpipe.run {
 	getVersions + 
 	"%_R*.fastq" * [ qc ] +
         "%_R*.fastq" * [
-                            trim_haloplexC +
+                            trimC +
                             alignMEM +
                             umiToBam +
                             dedupUmiPIC +

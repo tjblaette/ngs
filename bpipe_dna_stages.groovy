@@ -38,9 +38,11 @@ trim = {
     exec """sed '2~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' $input | sed '4~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' > $output.fastq"""
 }
 
-trim_haloplexC = {
-    exec "${NGSBITS}/FastqTrim -in $input1.fastq -out $output1.fastq -end 1"
-    exec "${NGSBITS}/FastqTrim -in $input2.fastq -out $output2.fastq -start 1"
+// haloplex trimming --> 1st bp of R2 fastq is always C for some reason ==> trim it
+trimC = {
+    //exec "cat $input1.fastq > $output1.fastq"
+    exec """sed '2~4s/^\\(.*\\).\$/\\1/g' $input1.fastq | sed '4~4s/^\\(.*\\).\$/\\1/g' > $output1.fastq"""
+    exec """sed '2~4s/^.\\(.*\\)\$/\\1/g' $input2.fastq | sed '4~4s/^.\\(.*\\)\$/\\1/g' > $output2.fastq"""
     exec "cut -f1 -d ' ' $input3.fastq > $output3.fastq"
 }
 
@@ -157,17 +159,11 @@ dedupUmiPIC = {
     output.dir="intermediate_files"
     exec """$PICARD MarkDuplicates
 	INPUT=$input.bam
-	OUTPUT=/dev/stdout
+	OUTPUT=$output.bam
 	REMOVE_DUPLICATES=true
         BARCODE_TAG="RX"
-	CREATE_INDEX=false
-	METRICS_FILE=${output.bam.prefix}_metrics.txt  |  $PICARD RevertSam
-                                                                INPUT=/dev/stdin
-                                                                OUTPUT=$output.bam
-                                                                CREATE_INDEX=true
-                                                                SORT_ORDER=coordinate
-                                                                REMOVE_DUPLICATE_INFORMATION=true
-                                                                REMOVE_ALIGNMENT_INFORMATION=false"""
+	CREATE_INDEX=true
+	METRICS_FILE=${output.bam.prefix}_metrics.txt"""
 }
 
 dedupBarcode = {
