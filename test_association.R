@@ -15,7 +15,6 @@ attr2 <- args[3] #"TP53del"
 
 contingency_table <- ""
 if (attr1 %in% colnames(anno) && attr2 %in% colnames(anno)) {
-    print(unique(anno[[attr1]]))
     contingency_table <- table(anno[c(attr1, attr2)]) #matrix(
 } else {
     normalized_counts_filename <- args[4] #"/media/data/tabl/pollack_ckaml/expression/p53Aberration_vs_wt/pollack_classLabels_p53mut_all_wBatch.tsv_DESeq2results_countsNormalized.txt"
@@ -66,20 +65,26 @@ if (attr1 %in% colnames(anno) && attr2 %in% colnames(anno)) {
 }
 
 
-#fisher.test(anno[[attribute]], as.factor(counts[which(gene_symbol == gene),] > gene_median))
-fisher <- fisher.test(contingency_table)
+if (ncol(contingency_table) >= 2 && nrow(contingency_table) >= 2) {
+    #fisher.test(anno[[attribute]], as.factor(counts[which(gene_symbol == gene),] > gene_median))
+    fisher <- fisher.test(contingency_table)
 
 
-print(fisher)
-cat("Inverse of Odds Ratio: ", 1 / fisher$estimate,"\n\n\n")
+    print(fisher)
+    cat("Inverse of Odds Ratio: ", 1 / fisher$estimate,"\n\n\n")
 
-cat("Contingency table:\n\n")
-print(contingency_table)
+    cat("Contingency table:\n\n")
+    print(contingency_table)
 
-cat("\n(The Odds Ratio is the ratio of the odds of a sample in", dimnames(contingency_table)[[1]], "group \"", rownames(contingency_table)[1], "\" being of group \"", colnames(contingency_table)[1], "\" vs \"", colnames(contingency_table)[2],"\")", sep="")
-cat("\n(The inverse Odds Ratio is the ratio of the odds of a sample in group \"", rownames(contingency_table)[1], "\" being of group \"", colnames(contingency_table)[2], "\" vs \"", colnames(contingency_table)[1],"\")\n", sep="")
+    cat("\n(The Odds Ratio is the ratio of the odds of a sample in", dimnames(contingency_table)[[1]], "group \"", rownames(contingency_table)[1], "\" being of group \"", colnames(contingency_table)[1], "\" vs \"", colnames(contingency_table)[2],"\")", sep="")
+    cat("\n(The inverse Odds Ratio is the ratio of the odds of a sample in group \"", rownames(contingency_table)[1], "\" being of group \"", colnames(contingency_table)[2], "\" vs \"", colnames(contingency_table)[1],"\")\n", sep="")
 
-if (exists("gene_median")) {
-    cat("\nThe median expression used to define high vs low expression was: ", gene_median, " normalized read counts\n\n", sep="")
+    if (exists("gene_median")) {
+        cat("\nThe median expression used to define high vs low expression was: ", gene_median, " normalized read counts\n\n", sep="")
+    }
+} else {
+    cat("\nCannot perform Fisher's exact test because the samples all share the same form of one of the attributes!\n")
+    cat("p-value = NA\n")
+    cat("Contingency table:\n\n")
+    print(contingency_table)
 }
-
