@@ -1,36 +1,34 @@
 args <- commandArgs(TRUE)                                                                  
-input_file <- args[1]
 
 
-normalized_counts_filename <- args[1] #"/media/data/tabl/pollack_ckaml/expression/p53Aberration_vs_wt/pollack_classLabels_p53mut_all_wBatch.tsv_DESeq2results_countsNormalized.txt"
-annotation_filename <- args[2] #"/media/data/tabl/pollack_ckaml/expression/p53Aberration_vs_wt/pollack_classLabels_p53mut_all_wBatch.tsv"
-
-attr1 <- args[3] #"CDKN1C"
-attr2 <- args[4] #"TP53del"
-
-
-counts <- read.table(
-        normalized_counts_filename,
-        header=1,
-        check.names=FALSE,
-        row.names=1)
-
-gene_symbol <- counts$geneSymbol
-counts <- counts[,-1]
-
+annotation_filename <- args[1] #"/media/data/tabl/pollack_ckaml/expression/p53Aberration_vs_wt/pollack_classLabels_p53mut_all_wBatch.tsv"
 anno <- read.table(
         annotation_filename,
         header=1,
         check.names=FALSE,
         row.names=1)
 
-counts <- counts[,rownames(anno)]
+attr1 <- args[2] #"CDKN1C"
+attr2 <- args[3] #"TP53del"
+
+
 
 contingency_table <- ""
 if (attr1 %in% colnames(anno) && attr2 %in% colnames(anno)) {
     print(unique(anno[[attr1]]))
     contingency_table <- table(anno[c(attr1, attr2)]) #matrix(
 } else {
+    normalized_counts_filename <- args[4] #"/media/data/tabl/pollack_ckaml/expression/p53Aberration_vs_wt/pollack_classLabels_p53mut_all_wBatch.tsv_DESeq2results_countsNormalized.txt"
+    counts <- read.table(
+            normalized_counts_filename,
+            header=1,
+            check.names=FALSE,
+            row.names=1)
+
+    gene_symbol <- counts$geneSymbol
+    counts <- counts[,-1]
+    counts <- counts[,rownames(anno)]
+
     if ((attr1 %in% colnames(anno) && attr2 %in% gene_symbol) || (attr1 %in% gene_symbol && attr2 %in% colnames(anno))) {
         if (attr1 %in% colnames(anno) && attr2 %in% gene_symbol) {
             attribute <- attr1
