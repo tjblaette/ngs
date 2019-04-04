@@ -479,6 +479,7 @@ if(length(sig) >= 1)
 
 ###########################################################################################
 ###########################################################################################
+# PRINT CANDIDATE GENE COUNTS (pretty AND simple)
 
 # calc max number of factor level combinations
 max_number_of_factor_combinations <- function(mydds) {
@@ -497,6 +498,34 @@ plottable_design <- my_design
 if (max_number_of_factor_combinations(mydds) > 4) {
     plottable_terms <- my_terms_of_interest[-1]
     plottable_design <- paste("~", rev(unlist(strsplit(my_design, split=" ")))[1])
+}
+
+
+# test if candidate genes are given
+candidates_file <- file.path(dirname(input_file), "candidates.txt")
+if (file.exists(candidates_file)) {
+    candidates <- read.table(candidates_file, header=FALSE)
+
+    cat("\nPrinting candidate gene counts...\n")
+    pdf(paste(output_prefix,"_candidateGeneCountPlots.pdf",sep=""))
+    for (i in which(rownames(mydds) %in% candidates[,1]))
+    {
+        # simple plot
+        plotCounts(
+                mydds,
+                gene=i,
+                xlab=plottable_design,
+                intgroup=plottable_terms,
+                replaced=("replaceCounts" %in% names(assays(mydds))))
+        # pretty plot
+        my_plotCounts(
+                mydds,
+                gene=i,
+                design=my_design,
+                terms_of_interest=my_terms_of_interest)
+    }
+    cat("done\n")
+    invisible(dev.off())
 }
 
 
