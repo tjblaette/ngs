@@ -479,7 +479,30 @@ if(length(sig) >= 1)
 
 ###########################################################################################
 ###########################################################################################
-# ANNOTATE WITH GENE SYMBOL IN ADDITION TO ENSEMBL ID
+
+# calc max number of factor level combinations
+max_number_of_factor_combinations <- function(mydds) {
+    n_combinations <- 1
+    for (this_factor in names(colData(mydds))) {
+        if (this_factor != "sizeFactor") {
+            n_levels <- length(levels(colData(mydds)[[this_factor]]))
+            n_combinations <- n_combinations * n_levels
+        }
+    }
+    return(n_combinations)
+}
+
+plottable_terms <- my_terms_of_interest
+plottable_design <- my_design
+if (max_number_of_factor_combinations(mydds) > 4) {
+    plottable_terms <- my_terms_of_interest[-1]
+    plottable_design <- paste("~", rev(unlist(strsplit(my_design, split=" ")))[1])
+}
+
+
+###########################################################################################
+###########################################################################################
+# PRINT ALL GENE COUNTS (simple only because pretty will take too long for all)
 
 cat("\nPrinting all counts...\n")
 pdf(paste(output_prefix,"_geneCountPlots.pdf",sep=""))
@@ -488,8 +511,8 @@ for (i in 1:nrow(mydds))
     plotCounts(
             mydds,
             gene=i,
-            xlab=my_design,
-            intgroup=my_terms_of_interest,
+            xlab=plottable_design,
+            intgroup=plottable_terms,
             replaced=("replaceCounts" %in% names(assays(mydds))))
 }
 cat("done\n")
