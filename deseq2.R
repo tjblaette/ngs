@@ -271,15 +271,6 @@ for (col in cols)
     print(my_plotPCA(trans, col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
 }
 
-# this is not working! printing one of cols only!
-#if (length(cols) > 1)
-#{
-#  print(my_plotPCA(trans, cols, 1, 2, "PC1: ", "PC2: "))
-#  print(my_plotPCA(trans, cols, 3, 4, "PC3: ", "PC4: "))
-#  print(my_plotPCA(trans, cols, 5, 6, "PC5: ", "PC6: "))
-#}
-
-
 
 for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
 {
@@ -407,15 +398,6 @@ if(length(sig) >= 1)
             }
         }
 
-        #  if (length(cols) > 1)
-        #  {
-        #    #sig_pca_full <- plotPCA(trans[sig,], intgroup=cols)
-        #    #print(sig_pca_full)
-        #    print(my_plotPCA(trans[sig, ], cols, 1, 2, "PC1: ", "PC2: "))
-        #    print(my_plotPCA(trans[sig, ], cols, 3, 4, "PC3: ", "PC4: "))
-        #    print(my_plotPCA(trans[sig, ], cols, 5, 6, "PC5: ", "PC6: "))
-        #  }
-
         # plot the same heatmaps as above, now for DEGs only
         pheatmap(
                 sigCounts,
@@ -449,7 +431,6 @@ if(length(sig) >= 1)
                     border_color=NA)
         }
 
-        print("heatmap sampleDistances")
         pheatmap(
                 sig_sampleDistMatrix,
                 annotation_col=df,
