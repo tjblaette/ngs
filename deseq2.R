@@ -109,7 +109,7 @@ write.table(
         counts,
         sep="\t",
         quote=FALSE,
-        file=paste(output_prefix,"_countsNormalized.txt", sep=""))
+        file=paste(output_prefix,"_all_countsNormalized.txt", sep=""))
 
 # get transformed read counts
 trans <- rlog(mydds)
@@ -119,7 +119,7 @@ write.table(
         assay(trans),
         sep="\t",
         quote=FALSE,
-        file=paste(output_prefix,"_countsNormalizedTransformed.txt", sep=""))
+        file=paste(output_prefix,"_all_countsNormalizedTransformed.txt", sep=""))
 
 
 # calculate coefficient of variation
@@ -131,7 +131,7 @@ cv <- standev/avrg
 
 # PREPARE PLOTTING
 cat("\nPrinting exploratory PCA and clusters...\n")
-pdf(paste(output_prefix,"_exploratory.pdf",sep=""), height=10)
+pdf(paste(output_prefix,"_all_exploratory.pdf",sep=""), height=10)
 
 # extract sample labels -> for columns get all factors for each sample
 all_cols <- names(colData(mydds))
@@ -251,7 +251,7 @@ for (col in cols)
     # retrieve colors for required number of groups to differentiate within col
     # colors <- ggplotColours(length(unique(na.omit(df[[col]]))))
     # retrieve colors used by PCA (PCA command copied from below!)
-    colors <- unique(ggplot_build(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))$data[[1]][["colour"]])
+    colors <- unique(ggplot_build(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_all_exploratory", sep="")))$data[[1]][["colour"]])
 
     # label colors with corresponding group
     names(colors) <- unique(df[[col]])
@@ -266,9 +266,9 @@ for (col in cols)
     anno_colors[[col]] <- colors
 
     # plot PCA -> if there is more than one annotation column, print a second PCA with all of that information
-    print(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
-    print(my_plotPCA(trans, col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
-    print(my_plotPCA(trans, col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_exploratory", sep="")))
+    print(my_plotPCA(trans, col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_all_exploratory", sep="")))
+    print(my_plotPCA(trans, col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_all_exploratory", sep="")))
+    print(my_plotPCA(trans, col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_all_exploratory", sep="")))
 }
 
 
@@ -351,7 +351,7 @@ write.table(
         myresults[order(myresults$padj),],
         sep="\t",
         quote=FALSE,
-        file=paste(output_prefix,".txt",sep=""))
+        file=paste(output_prefix,"_all.txt",sep=""))
 
 # print summary of deg analysis
 sink(paste(output_prefix,"_summary.txt",sep=""))
@@ -364,112 +364,140 @@ sink()
 ###########################################################################################
 # PROCESS DEGs
 
+get_candidate_genes <- function() {
+    candidates_file <- file.path(dirname(input_file), "candidates.txt")
+    if (file.exists(candidates_file)) {
+        candidates <- read.table(candidates_file, header=FALSE)
 
-sig <- which(myresults$padj < my_alpha)
-
-# check if there are significant DEGs to plot
-if(length(sig) >= 1)
-{
-    sigCounts <- assay(trans)[sig, ]
-    write.table(
-            sigCounts,
-            sep="\t",
-            quote=FALSE,
-            file=paste(output_prefix,"_countsNormalizedTransformed_degs.txt", sep=""))
-
-    if (length(sig) > 1) {
-        # euclidean distances
-        sig_sampleDists <- dist(t(sigCounts))
-        sig_sampleDistMatrix <- as.matrix(sig_sampleDists)
-
-        # plot PCAs, again color-coding each of the annotations separately
-        cat("\nPrinting DEG PCA and clusters...\n")
-        pdf(paste(output_prefix,"_degs.pdf",sep=""), height=10)
-        for (col in cols)
-        {
-            if (length(sig) >= 2) {
-                print(my_plotPCA(trans[sig, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
-            }
-            if (length(sig) >= 4) {
-                print(my_plotPCA(trans[sig, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
-            }
-            if (length(sig) >= 6) {
-                print(my_plotPCA(trans[sig, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_degs", sep="")))
-            }
-        }
-
-        # plot the same heatmaps as above, now for DEGs only
-        pheatmap(
-                sigCounts,
-                annotation_col=df,
-                annotation_color=anno_colors,
-                clustering_distance_cols=sig_sampleDists,
-                main="Clustered by Euclidean distance of DEGs",
-                scale="row",
-                show_rownames=length(sig)<=50,
-                treeheight_row=0,
-                fontsize=5,
-                border_color=NA)
-
-        # pearson correlation distances (taken from pheatmap source code)
-        # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
-        # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
-        if (sum(apply(sigCounts, 2, sd) == 0) > 0) {
-            cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
-        } else {
-            sig_sampleDists_corr <- as.dist(1 - cor(sigCounts))
-            pheatmap(
-                    sigCounts,
-                    annotation_col=df,
-                    annotation_color=anno_colors,
-                    clustering_distance_cols=sig_sampleDists_corr,
-                    main="Clustered by Pearson correlation of DEGs",
-                    scale="row",
-                    show_rownames=length(sig)<=50,
-                    treeheight_row=0,
-                    fontsize=5,
-                    border_color=NA)
-        }
-
-        pheatmap(
-                sig_sampleDistMatrix,
-                annotation_col=df,
-                annotation_color=anno_colors,
-                clustering_distance_rows=sig_sampleDists,
-                clustering_distance_cols=sig_sampleDists,
-                main="Euclidean inter-sample distance based on DEGs",
-                fontsize=5,
-                border_color=NA)
-        cat("done\n")
-        invisible(dev.off())
+        return(which(rownames(mydds) %in% candidates[,1]))
+    } else {
+        return(c())
     }
-
-    # plot DEG counts
-    cat("\nPrinting DEG counts...\n")
-    pdf(paste(output_prefix,"_geneCountPlots_degs.pdf",sep=""))
-    for (i in sig)
-    {
-        my_plotCounts(mydds, gene=i, design=my_design, terms_of_interest=my_terms_of_interest)
-    }
-    cat("done\n")
-    invisible(dev.off())
-} else {
-    cat("\nNo DEGs to process!\n")
 }
 
 
+degs <- which(myresults$padj < my_alpha)
+candidates <- get_candidate_genes()
+
+for (gois in c("degs", "candidates")) {
+    goi_type <- gois
+    gois <- eval(parse(text=gois))
+
+    # check if there are genes of interest (gois) to plot
+    if(length(gois) >= 1)
+    {
+        goiCounts <- assay(trans)[gois, ]
+        write.table(
+                goiCounts,
+                sep="\t",
+                quote=FALSE,
+                file=paste(output_prefix, "_", goi_type, "_countsNormalizedTransformed.txt", sep=""))
+
+        if (length(gois) > 1) {
+            # euclidean distances
+            goi_sampleDists <- dist(t(goiCounts))
+            goi_sampleDistMatrix <- as.matrix(goi_sampleDists)
+
+            # plot PCAs, again color-coding each of the annotations separately
+            cat(paste("\nPrinting ", goi_type, " PCA and clusters...\n", sep=""))
+            pdf(paste(output_prefix, "_", goi_type,".pdf",sep=""), height=10)
+            for (col in cols)
+            {
+                if (length(gois) >= 2) {
+                    print(my_plotPCA(trans[gois, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                }
+                if (length(gois) >= 4) {
+                    print(my_plotPCA(trans[gois, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                }
+                if (length(gois) >= 6) {
+                    print(my_plotPCA(trans[gois, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                }
+            }
+
+            # plot the same heatmaps as above, now for GOIs only
+            pheatmap(
+                    goiCounts,
+                    annotation_col=df,
+                    annotation_color=anno_colors,
+                    clustering_distance_cols=goi_sampleDists,
+                    main=paste("Clustered by Euclidean distance of ", goi_type, sep=""),
+                    scale="row",
+                    show_rownames=length(gois)<=50,
+                    treeheight_row=0,
+                    fontsize=5,
+                    border_color=NA)
+
+            # pearson correlation distances (taken from pheatmap source code)
+            # --> pearson's r = cov(X,Y) / sd(X)*sd(Y)
+            # ==> undefined if sd() is 0 for any sample! --> in that case, omit plot
+            if (sum(apply(goiCounts, 2, sd) == 0) > 0) {
+                cat("Clustering based on Pearson correlation could not be performed\n--> standard deviation of at least one sample was 0\n")
+            } else {
+                goi_sampleDists_corr <- as.dist(1 - cor(goiCounts))
+                pheatmap(
+                        goiCounts,
+                        annotation_col=df,
+                        annotation_color=anno_colors,
+                        clustering_distance_cols=goi_sampleDists_corr,
+                        main=paste("Clustered by Pearson correlation of ", goi_type, sep=""),
+                        scale="row",
+                        show_rownames=length(gois)<=50,
+                        treeheight_row=0,
+                        fontsize=5,
+                        border_color=NA)
+            }
+
+            pheatmap(
+                    goi_sampleDistMatrix,
+                    annotation_col=df,
+                    annotation_color=anno_colors,
+                    clustering_distance_rows=goi_sampleDists,
+                    clustering_distance_cols=goi_sampleDists,
+                    main=paste("Euclidean inter-sample distance based on ", goi_type, sep=""),
+                    fontsize=5,
+                    border_color=NA)
+            invisible(dev.off())
+        }
+
+        # plot GOI counts
+        cat(paste("Printing ", goi_type, " counts...\n", sep=""))
+        pdf(paste(output_prefix, "_", goi_type, "_geneCountPlots.pdf",sep=""))
+        for (i in gois)
+        {
+            if (length(my_terms_of_interest) > 1) {
+                # simple plot
+                my_plotCounts(
+                        mydds,
+                        gene=i,
+                        design=paste("~", rev(unlist(strsplit(my_design, split=" ")))[1]),
+                        terms_of_interest=rev(my_terms_of_interest)[1])
+            }
+            # pretty plot
+            my_plotCounts(
+                    mydds,
+                    gene=i,
+                    design=my_design,
+                    terms_of_interest=my_terms_of_interest)
+        }
+        cat("done\n")
+        invisible(dev.off())
+    } else {
+        cat(paste("\nNo ", goi_type, " to process!\n", sep=""))
+    }
+}
+
+
+
 ###########################################################################################
 ###########################################################################################
-# PRINT CANDIDATE GENE COUNTS (pretty AND simple)
+# PRINT ALL GENE COUNTS (simple only because pretty will take too long for all)
 
 # calc max number of factor level combinations
 max_number_of_factor_combinations <- function(mydds) {
     n_combinations <- 1
-    for (this_factor in names(colData(mydds))) {
-        if (this_factor != "sizeFactor") {
-            n_levels <- length(levels(colData(mydds)[[this_factor]]))
-            n_combinations <- n_combinations * n_levels
-        }
+    for (this_factor in my_terms_of_interest) {
+        n_levels <- length(levels(colData(mydds)[[this_factor]]))
+        n_combinations <- n_combinations * n_levels
     }
     return(n_combinations)
 }
@@ -477,45 +505,13 @@ max_number_of_factor_combinations <- function(mydds) {
 plottable_terms <- my_terms_of_interest
 plottable_design <- my_design
 if (max_number_of_factor_combinations(mydds) > 4) {
-    plottable_terms <- my_terms_of_interest[-1]
+    plottable_terms <- rev(my_terms_of_interest)[1]
     plottable_design <- paste("~", rev(unlist(strsplit(my_design, split=" ")))[1])
 }
 
 
-# test if candidate genes are given
-candidates_file <- file.path(dirname(input_file), "candidates.txt")
-if (file.exists(candidates_file)) {
-    candidates <- read.table(candidates_file, header=FALSE)
-
-    cat("\nPrinting candidate gene counts...\n")
-    pdf(paste(output_prefix,"_candidateGeneCountPlots.pdf",sep=""))
-    for (i in which(rownames(mydds) %in% candidates[,1]))
-    {
-        # simple plot
-        plotCounts(
-                mydds,
-                gene=i,
-                xlab=plottable_design,
-                intgroup=plottable_terms,
-                replaced=("replaceCounts" %in% names(assays(mydds))))
-        # pretty plot
-        my_plotCounts(
-                mydds,
-                gene=i,
-                design=my_design,
-                terms_of_interest=my_terms_of_interest)
-    }
-    cat("done\n")
-    invisible(dev.off())
-}
-
-
-###########################################################################################
-###########################################################################################
-# PRINT ALL GENE COUNTS (simple only because pretty will take too long for all)
-
 cat("\nPrinting all counts...\n")
-pdf(paste(output_prefix,"_geneCountPlots.pdf",sep=""))
+pdf(paste(output_prefix,"_all_geneCountPlots.pdf",sep=""))
 for (i in 1:nrow(mydds))
 {
     plotCounts(

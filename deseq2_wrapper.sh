@@ -40,7 +40,7 @@ echo ""
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
-for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}_countsNormalized.txt" "${OUT_PREFIX}_countsNormalizedTransformed.txt" "${OUT_PREFIX}_countsNormalizedTransformed_degs.txt"
+for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}"_*countsNormalized.txt "${OUT_PREFIX}"_*countsNormalizedTransformed.txt
 do
     # continue only if the file exists
     # --> abort, if there are no DEGs to process
@@ -67,7 +67,7 @@ done
 
 
 # save separate DESeq2 output file with defined p-values only
-for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}_annotated.txt"
+for FILE in "${OUT_PREFIX}_all.txt"
 do
     [ -f "$FILE" ] || continue
     grep -wv 'NA' "$FILE" >  "${FILE%.txt}_woutNA.txt"
