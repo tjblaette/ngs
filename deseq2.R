@@ -181,9 +181,9 @@ my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, re
 }
 
 # function to plot PCA (based on DESeq2 code)
-my_plotPCA <- function(data, intgroup, xPC, yPC, xPC_label, yPC_label, pass_outputprefix=output_prefix)
+my_plotPCA <- function(data, intgroup, xPC, yPC, xPC_label, yPC_label, ntop=500, pass_outputprefix=output_prefix)
 {
-    pcaData <- my_prepPCA(data, xPC, yPC, intgroup=intgroup, returnData=TRUE, output_prefix=pass_outputprefix)
+    pcaData <- my_prepPCA(data, xPC, yPC, intgroup=intgroup, ntop=ntop, returnData=TRUE, output_prefix=pass_outputprefix)
     percentVar <- round(100 * attr(pcaData, "percentVar"))
     ggplot(pcaData, aes_(as.name("PC1"), as.name("PC2"), color = as.name(intgroup))) +
             geom_point(size = 3) +
@@ -404,13 +404,13 @@ for (gois in c("degs", "candidates")) {
             for (col in cols)
             {
                 if (length(gois) >= 2) {
-                    print(my_plotPCA(trans[gois, ], col, 1, 2, "PC1: ", "PC2: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                    print(my_plotPCA(trans[gois, ], col, 1, 2, "PC1: ", "PC2: ", ntop=length(gois), pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
                 }
                 if (length(gois) >= 4) {
-                    print(my_plotPCA(trans[gois, ], col, 3, 4, "PC3: ", "PC4: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                    print(my_plotPCA(trans[gois, ], col, 3, 4, "PC3: ", "PC4: ", ntop=length(gois), pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
                 }
                 if (length(gois) >= 6) {
-                    print(my_plotPCA(trans[gois, ], col, 5, 6, "PC5: ", "PC6: ", pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
+                    print(my_plotPCA(trans[gois, ], col, 5, 6, "PC5: ", "PC6: ", ntop=length(gois), pass_outputprefix=paste(output_prefix, "_", goi_type, sep="")))
                 }
             }
 
