@@ -40,7 +40,7 @@ echo ""
 
 
 # ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
-for FILE in "${OUT_PREFIX}.txt" "${OUT_PREFIX}"_*countsNormalized.txt "${OUT_PREFIX}"_*countsNormalizedTransformed.txt
+for FILE in "${OUT_PREFIX}_all.txt" "${OUT_PREFIX}"_*countsNormalized.txt "${OUT_PREFIX}"_*countsNormalizedTransformed.txt "${OUT_PREFIX}"_*countsNormalized_withOutliersReplaced.txt "${OUT_PREFIX}"_*pca.txt
 do
     # continue only if the file exists
     # --> abort, if there are no DEGs to process
