@@ -111,6 +111,15 @@ write.table(
         quote=FALSE,
         file=paste(output_prefix,"_all_countsNormalized.txt", sep=""))
 
+# by default, counts do *not* contain replaced outlier counts
+# for clarity, print these as well
+counts_withOutliersReplaced <- counts(mydds,normalized=TRUE, replaced=TRUE)
+write.table(
+        counts_withOutliersReplaced,
+        sep="\t",
+        quote=FALSE,
+        file=paste(output_prefix,"_all_countsNormalized_withOutliersReplaced.txt", sep=""))
+
 # get transformed read counts
 trans <- rlog(mydds)
 #save(trans, file=paste(output_prefix,"_trans.RData", sep=""))
