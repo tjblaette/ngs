@@ -395,7 +395,8 @@ for (gois in c("degs", "candidates")) {
     # check if there are genes of interest (gois) to plot
     if(length(gois) >= 1)
     {
-        goiCounts <- assay(trans)[gois, ]
+        # subset to gois while keeping matrix instead of vector even for single goi
+        goiCounts <- assay(trans)[gois, , drop = FALSE]
         write.table(
                 goiCounts,
                 sep="\t",
