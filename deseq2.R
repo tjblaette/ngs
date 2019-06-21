@@ -5,6 +5,7 @@ my_reference_level <- args[3] # factor level to use as the reference for calcula
 my_alpha <- as.numeric(args[4])
 my_lfc <- as.numeric(args[5])
 output_prefix <- args[6]
+gene_id_to_symbol_dict <- args[7]
 
 # save script arguments to file
 sink(paste(output_prefix, "_args.txt", sep=""), split=TRUE)
@@ -12,7 +13,8 @@ cat("Input file: ", input_file)
 cat("\nDesign formula: ", my_design)
 cat("\nReference level: ", my_reference_level)
 cat("\nFDR cutoff alpha: ", my_alpha)
-cat("\nMinimum log fold change: ", my_lfc, "\n")
+cat("\nMinimum log fold change: ", my_lfc)
+cat("\nGene ID to symbol dictionary: ", gene_id_to_symbol_dict, "\n")
 sink()
 
 # load required libraries
@@ -31,6 +33,29 @@ remove_interaction_terms <- function(design_terms) {
     return (design_terms)
 }
 
+annotate_gene_symbol <- function(df, dict_file=gene_id_to_symbol_dict) {
+    # assuming that versioned ensembl IDs are in rownames of input df!
+    dict <- read.table(dict_file, col.names=c("geneID", "geneSymbol"))
+    annotated <- merge(df, dict, by.x=0, by.y=1, all.x=TRUE)
+
+    if (dim(annotated)[1] != dim(df)[1]) {
+        print(dim(df))
+        print(dim(annotated))
+        print("Wrong dimensions during gene symbol annotation!")
+    }
+
+    rownames(annotated) <- apply(
+            data.frame(annotated$Row.names, annotated$geneSymbol),
+            1,
+            paste0,
+            collapse="_")
+
+    # delete unnecessary columns created during merging
+    annotated$geneSymbol <- NULL
+    annotated$Row.names <- NULL
+    annotated$Group.1 <- NULL
+    return(annotated)
+}
 
 fromFile <- function(input) {
     myDir <- "intermediate_files"
@@ -106,7 +131,9 @@ invisible(dev.off())
 # get normalized read counts
 counts <- counts(mydds,normalized=TRUE)
 write.table(
-        counts,
+        annotate_gene_symbol(counts),
+        col.names=NA,
+        row.names=TRUE,
         sep="\t",
         quote=FALSE,
         file=paste(output_prefix,"_all_countsNormalized.txt", sep=""))
@@ -115,7 +142,9 @@ write.table(
 # for clarity, print these as well
 counts_withOutliersReplaced <- counts(mydds,normalized=TRUE, replaced=TRUE)
 write.table(
-        counts_withOutliersReplaced,
+        annotate_gene_symbol(counts_withOutliersReplaced),
+        col.names=NA,
+        row.names=TRUE,
         sep="\t",
         quote=FALSE,
         file=paste(output_prefix,"_all_countsNormalized_withOutliersReplaced.txt", sep=""))
@@ -125,7 +154,9 @@ trans <- rlog(mydds)
 #save(trans, file=paste(output_prefix,"_trans.RData", sep=""))
 #load(file=paste(output_prefix,"_trans.RData", sep=""))
 write.table(
-        assay(trans),
+        annotate_gene_symbol(assay(trans)),
+        col.names=NA,
+        row.names=TRUE,
         sep="\t",
         quote=FALSE,
         file=paste(output_prefix,"_all_countsNormalizedTransformed.txt", sep=""))
@@ -165,7 +196,9 @@ my_prepPCA <- function (object, xPC, yPC, intgroup = "condition", ntop = 500, re
     select <- order(rv, decreasing = TRUE)[seq_len(min(ntop, length(rv)))]
     pca <- prcomp(t(assay(object)[select, ]))
     write.table(
-            pca["rotation"],
+            annotate_gene_symbol(data.frame(pca["rotation"])),
+            col.names=NA,
+            row.names=TRUE,
             sep="\t",
             quote=FALSE,
             file=paste(output_prefix, "_pca.txt", sep=""))
@@ -300,7 +333,7 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
     #3: complete linkage clustering based on Euclidean distance of Euclidean intersample distances -> based on top X genes with max CV, scaled by row
     # to scale by row after clustering samples, provide distances calculated above -> rows are still clustered after scaling
     pheatmap(
-            transCounts,
+            annotate_gene_symbol(transCounts),
             annotation_col=df,
             annotation_color=anno_colors,
             clustering_distance_cols=sampleDists,
@@ -319,7 +352,7 @@ for(maxGenes in c(50,100,500,1000,5000,10000,20000,30000))
     } else {
         sampleDists_corr <- as.dist(1 - cor(transCounts))
         pheatmap(
-                transCounts,
+                annotate_gene_symbol(transCounts),
                 annotation_col=df,
                 annotation_color=anno_colors,
                 clustering_distance_cols=sampleDists_corr,
@@ -357,7 +390,9 @@ myresults <- results(mydds, alpha=my_alpha, altHypothesis="greaterAbs", lfcThres
 
 # sort according to adjusted p-value and write results to file
 write.table(
-        myresults[order(myresults$padj),],
+        annotate_gene_symbol(data.frame(myresults[order(myresults$padj),])),
+        col.names=NA,
+        row.names=TRUE,
         sep="\t",
         quote=FALSE,
         file=paste(output_prefix,"_all.txt",sep=""))
@@ -398,7 +433,9 @@ for (gois in c("degs", "candidates")) {
         # subset to gois while keeping matrix instead of vector even for single goi
         goiCounts <- assay(trans)[gois, , drop = FALSE]
         write.table(
-                goiCounts,
+                annotate_gene_symbol(goiCounts),
+                col.names=NA,
+                row.names=TRUE,
                 sep="\t",
                 quote=FALSE,
                 file=paste(output_prefix, "_", goi_type, "_countsNormalizedTransformed.txt", sep=""))
@@ -426,7 +463,7 @@ for (gois in c("degs", "candidates")) {
 
             # plot the same heatmaps as above, now for GOIs only
             pheatmap(
-                    goiCounts,
+                    annotate_gene_symbol(goiCounts),
                     annotation_col=df,
                     annotation_color=anno_colors,
                     clustering_distance_cols=goi_sampleDists,
@@ -445,7 +482,7 @@ for (gois in c("degs", "candidates")) {
             } else {
                 goi_sampleDists_corr <- as.dist(1 - cor(goiCounts))
                 pheatmap(
-                        goiCounts,
+                        annotate_gene_symbol(goiCounts),
                         annotation_col=df,
                         annotation_color=anno_colors,
                         clustering_distance_cols=goi_sampleDists_corr,

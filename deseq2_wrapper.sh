@@ -23,48 +23,27 @@ REFERENCE_LEVEL="$3"
 ALPHA=${4:-0.1}
 LFC=${5:-0.6}
 BIOMART=${6:-'/NGS/known_sites/hg19/gencode.v19.chr_patch_hapl_scaff.annotation_UCSCcontigs.gtf'}   #was: /NGS/known_sites/human_ensembl_biomart_gene_ID_to_symbol/mart_export_sorted_woutLRG.txt'}
+GENE_ID_TO_SYMBOL_DICT="${BIOMART%.gtf}_geneIDtoSymbol.txt"
 ENTREZ=${7:-'/NGS/known_sites/hg19/biomart_ensembl74ID_to_entrezID_mapped.txt'}
 
 # check if the gene ID to Symbol conversion table exists already
 # if it does not, create it now
-if [ ! -e "${BIOMART%.gtf}_geneIDtoSymbol.txt" ]
+if [ ! -e "$GENE_ID_TO_SYMBOL_DICT" ]
 then
-    cat "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z]\+_[a-z]\+//g' -e 's/;/\t/' -e 's/"//g' -e 's/ //g' | grep -v 'level' | sort -k1,1b | uniq > ${BIOMART%.gtf}_geneIDtoSymbol.txt
+    cat "$BIOMART" | cut -f9 | cut -f1,5 -d';' | sed -e 's/[a-z]\+_[a-z]\+//g' -e 's/;/\t/' -e 's/"//g' -e 's/ //g' | grep -v 'level' | sort -k1,1b | uniq > "$GENE_ID_TO_SYMBOL_DICT"
 fi
 
 
 # RUN DESEQ2 SCRIPT
 # -> use the script in the same folder as this script
-Rscript "$(dirname $0)/deseq2.R" "$IN" "$DESIGN" "$REFERENCE_LEVEL" "$ALPHA" "$LFC" "$OUT_PREFIX"
+Rscript "$(dirname $0)/deseq2.R" "$IN" "$DESIGN" "$REFERENCE_LEVEL" "$ALPHA" "$LFC" "$OUT_PREFIX" "$GENE_ID_TO_SYMBOL_DICT"
 echo ""
 
-
-# ANNOTATE GENE COUNTS with gene symbols in addition to ENSEMBL IDs
-for FILE in "${OUT_PREFIX}_all.txt" "${OUT_PREFIX}"_*countsNormalized.txt "${OUT_PREFIX}"_*countsNormalizedTransformed.txt "${OUT_PREFIX}"_*countsNormalized_withOutliersReplaced.txt "${OUT_PREFIX}"_*pca.txt
+# FIX column header of gene-symbol annotated text files
+for FILE in "${OUT_PREFIX}_"*txt
 do
-    # continue only if the file exists
-    # --> abort, if there are no DEGs to process
-    ([ -f "$FILE" ] && [ "$(grep -c '^ENS' "$FILE")" -gt 0 ]) || continue
-    echo "Annotating gene symbols for $FILE"
-
-    # define output file name for annotated file
-    ANNOTATED=${FILE%.txt}_annotated.txt
-
-    # add header
-    echo -ne 'geneID\tgeneSymbol\t' > $ANNOTATED
-    head -n 1 "$FILE" | sed -e 's/"//g' >> $ANNOTATED
-
-    # add and annotated the file
-    join -t '	' <(sed 's/\.[0-9]*//' "${BIOMART%.gtf}_geneIDtoSymbol.txt") <(tail -n +2 "$FILE" | sort -k1,1b | sed -e 's/"//g' -e 's/\.[0-9]*//') >> $ANNOTATED
-
-    if [ "$(wc -l "$FILE" | cut -f1 -d' ')" -eq "$(wc -l "$ANNOTATED" | cut -f1 -d' ')" ]
-    then
-        mv "$ANNOTATED" "$FILE"
-    else
-        echo "not all features could be annotated - keeping original file"
-    fi
+    sed -i '1s/^\t/geneID_geneSymbol\t/' $FILE
 done
-
 
 # save separate DESeq2 output file with defined p-values only
 for FILE in "${OUT_PREFIX}_all.txt"
