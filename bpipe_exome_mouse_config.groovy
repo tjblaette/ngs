@@ -2,7 +2,7 @@
 
 
 // VARIANT FILTER SCRIPT
-FILTER="filter_mouse_wFlankingSeq.sh"
+FILTER="filter_mouse.sh"
 
 // KNOWN SEQUENCES
 REF="${NGS}/refgenome/mm10/mm10_reordered.fa"
