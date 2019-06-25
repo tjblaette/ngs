@@ -23,7 +23,7 @@
 #        BED entry (amplicon) with that coverage.
 #
 # Output:
-#   $DIR/coverage_summary.tsv: containing all
+#   $DIR/average_coverage_summary.tsv: containing all
 #       of the collected and merged statistics.
 #
 ####
@@ -32,7 +32,7 @@
 BED=$1
 GENES=$(cut -f4 "$BED" | sort | uniq | sed 's/\r//')
 
-OUT='averageCoverage_summary.tsv'
+OUT='average_coverage_summary.tsv'
 
 
 # print header
