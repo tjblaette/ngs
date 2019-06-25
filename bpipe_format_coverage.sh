@@ -1,10 +1,32 @@
 #!/bin/bash
 
-IN=$1 #input file is output of BEDTools coverageBed function with -hist option
+####
+# T.J.Blätte
+# 2015
+####
+#
+# Writes final BEDTools coverage stats
+#       to stdout (redirected by bpipe
+#       to *.summary file).
+#
+# Args:
+#   IN: Output file from BEDTools coverageBed -hist,
+#       which is created by bpipe mutation calling pipelines.
+#   FASTQ1: Forward reads' FASTQ file of the same sample to
+#       which IN belongs. Required to calculate the total
+#       number of sequenced bases, which in turn is required
+#       to obtain the proportion of on-target bases.
+#   FASTQ2: Reverse reads' FASTQ file of the same sample to
+#       which IN belongs.
+#   [...]: Coverage thresholds of interest (int). For each of these,
+#       the proportion of the target reference covered on average by
+#       at least that many reads is calculated and written to stdout.
+#
+####
+
+IN=$1
 FASTQ1=$2
 FASTQ2=$3
-# all other inputs are coverage thresholds of interest
-
 
 TOTAL_BASES_FASTQ1=$(awk -v LINE=1 -v TOTAL_BASES=0 '{if (LINE == 0) {TOTAL_BASES=TOTAL_BASES+length($0); LINE=3;} else  {LINE=LINE-1}} END {print TOTAL_BASES}' $FASTQ1)
 TOTAL_BASES_FASTQ2=$(awk -v LINE=1 -v TOTAL_BASES=0 '{if (LINE == 0) {TOTAL_BASES=TOTAL_BASES+length($0); LINE=3;} else  {LINE=LINE-1}} END {print TOTAL_BASES}' $FASTQ2)
@@ -27,6 +49,3 @@ do
 		awk -v OFS='\t' -v CUTOFF=$CUTOFF '$2 >= CUTOFF {print $6" bp had at least "CUTOFF" reads ("$7"%)"} END {print "0 bp had at least "CUTOFF" reads (0%)"}' $IN | head -n 1
 	fi
 done
-
-# reads on target: 4350038 of 159936615 initial reads in fasta (2.71985%)
-#on average 33.2595 reads per bp on the target
