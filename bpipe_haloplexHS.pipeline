@@ -2,10 +2,10 @@
 
 
 // LOAD STAGES
-load 'bpipe_dna_stages.groovy'
+load 'bpipe_dna.stages'
 
 // LOAD CONFIG
-load 'bpipe_amplicon_config.groovy'
+load 'bpipe_amplicon.config'
 
 
 Bpipe.run {

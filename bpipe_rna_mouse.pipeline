@@ -2,11 +2,11 @@
 
 
 // LOAD STAGES
-load 'bpipe_dna_stages.groovy'
-load 'bpipe_rna_stages.groovy'
+load 'bpipe_dna.stages'
+load 'bpipe_rna.stages'
 
 // LOAD CONFIG
-load 'bpipe_rna_mouse_config.groovy'
+load 'bpipe_rna_mouse.config'
 
 
 Bpipe.run {

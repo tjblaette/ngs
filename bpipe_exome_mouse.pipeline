@@ -2,10 +2,10 @@
 
 
 // LOAD STAGES
-load 'bpipe_dna_stages.groovy'
+load 'bpipe_dna.stages'
 
 // LOAD CONFIG
-load 'bpipe_exome_mouse_config.groovy'
+load 'bpipe_exome_mouse.config'
 
 Bpipe.run {
 	getVersions + 
