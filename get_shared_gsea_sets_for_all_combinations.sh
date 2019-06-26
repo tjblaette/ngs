@@ -1,8 +1,33 @@
 #!/bin/bash
 
-# given a threshold ALPHA, the ranking metric RANK used for GSEA preranked input gene lists and one or multiple GSEA output file prefixes (PATH/TO/GSEA/OUTPUT/FOLDER/DESEQ2-OUTPUT_), output enriched / depleted gene sets (based on ALPHA) shared by all GSEA output files with the provided prefix that were ranked by RANK
-# --> if only one file is given, output gene sets of that file
-# --> if multiple files are given, output signficantly enriched / depleted gene sets present in all of these
+####
+# T.J.Blätte
+# 2018
+####
+#
+# Based on a specified FDR cutoff, returns the significant gene sets
+#       shared by one or more GSEA result tables.
+#
+# Args:
+#   ALPHA: FDR cutoff for statistical significance of gene set
+#       enrichment.
+#   RANK: Ranking metric used for the GSEA preranked input gene lists.
+#       Though previous versions supported various rankings, currently
+#       gsea.sh will generate only those based on the log fold change.
+#       For these analyses, pass 'lfc'.
+#   [...]: All other inputs are GSEA result table *prefixes*. These
+#       prefixes must make
+#
+#       ${PREFIX}*${GENE_SET_COLLECTION}*${RANKING_METRIC}*/gsea_report_*${CHANGE}*.xls
+#
+#       unique - they are used to collect all the GSEA result tables
+#       from which shared significant gene sets are gathered.
+#       For each combination of gene-set-collection, ranking-metric and
+#       direction-of-enrichment (enrichment vs depletion), the
+#       significant gene sets shared by files of *all* of the provided
+#       file prefixes are returned and printed to stdout.
+####
+
 
 # test that sufficient input was given (at least ALPHA, RANK and one GSEA output file prefix)
 if [ ! -n "$1" ] || [ ! -n "$2" ] || [ ! -n "$3" ]
@@ -39,7 +64,7 @@ do
                 fi
             done
         done
-            
+
         if [ -n "$SAMPLES" ]
         then
             get_shared_gsea_sets.sh $ALPHA $SAMPLES

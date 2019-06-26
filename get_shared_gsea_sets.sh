@@ -1,10 +1,25 @@
 #!/bin/bash
 
-# given a threshold ALPHA and one or multiple GSEA output files (gsea_report*xls), output enriched / depleted gene sets (based on ALPHA) shared by all GSEA output files given
-# --> if only one file is given, output gene sets of that file
-# --> if multiple files are given, output signficantly enriched / depleted gene sets present in all of these
+####
+# T.J.Blätte
+# 2018
+####
+#
+# Based on a specified FDR cutoff, returns the significant gene sets
+#       shared by one or more GSEA result tables.
+#
+# Args:
+#   ALPHA: FDR cutoff for statistical significance of gene set
+#       enrichment.
+#   [...]: All other inputs are GSEA result tables (gsea_report*xls),
+#       from which significant gene sets shared by *all* of the
+#       provided files are printed to stdout.
+#
+####
 
-# test that sufficient input was given (at least ALPHA and one GSEA output file)
+
+# test that sufficient input was given
+# -> at least ALPHA and one GSEA output file
 if [ ! -n "$1" ] || [ ! -n "$2" ]
 then
     echo -e "At least two arguments must be passed:\n\t- ALPHA cutoff to filter gene sets\n\t-INPUT FILE from GSEA (gsea_report*.xls)"
