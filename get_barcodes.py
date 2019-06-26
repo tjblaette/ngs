@@ -4,23 +4,46 @@ import pprint
 import os
 import copy
 
+"""
+T.J.Blätte
+2018
+"""
+
+"""
+To extract molecular barcodes sequenced as part of the main reads
+into separate FASTQ files.
+
+Args:
+    fastq1: FASTQ file of forward reads (REQUIRED)
+    fastq2: FASTQ file of reverse reads (REQUIRED)
+    sampleID: sample ID used as output file prefix (REQUIRED)
+    primer1: Gene-specific primer sequence of forward reads (REQUIRED)
+    primer2: Gene-specific primer sequence of reverse reads (REQUIRED)
+
+Output:
+    sampleID_indexed_R1.fastq: fastq1 minus the extracted sequence
+    sampleID_indexed_R2.fastq: fastq2 minus the extracted sequence
+    sampleID_indexed_I1.fastq: the sequences extracted from fastq1
+    sampleID_indexed_I2.fastq: the sequences extracted from fastq2
+    sampleID_indexed_I.fastq: concatenation of extracted sequences
+"""
 
 class Read(object):
     """
     Sequencing read.
-    """ 
+    """
     def __init__(
-                self, 
-                seq, 
+                self,
+                seq,
                 name=None,
                 desc="+",
                 index=None,
-                sense=1, 
-                bqs=None, 
-                index_bqs=None, 
+                sense=1,
+                bqs=None,
+                index_bqs=None,
                 counts=1,
-                al_score=None, 
-                al_seq=None, 
+                al_score=None,
+                al_seq=None,
                 al_ref=None,
                 al_file=None):
         """
@@ -31,11 +54,11 @@ class Read(object):
             name (str): Read ID = 1st line of FASTQ file entry.
             desc (str): Read description = 3rd line of FASTQ file entry.
             index (int): Read index to identify paired reads
-                for paired-end sequencing 
+                for paired-end sequencing
                 --> will have the same index
             sense (int): 1 for forward reads, -1 for reverse.
             bqs (str): Base quality scores of the read.
-            index_bqs (str): Base quality scores of the 
+            index_bqs (str): Base quality scores of the
                 corresponding index read.
             counts (int): Total number of reads with these
                 exact attributes.
@@ -43,7 +66,7 @@ class Read(object):
                 alignment.
             al_seq (str): Read sequence aligned to the reference.
             al_ref (str): Reference sequence aligned to the read.
-            al_file (str): Name of the file containing the 
+            al_file (str): Name of the file containing the
                 read-to-reference alignment.
         """
         self.seq = seq
@@ -62,7 +85,7 @@ class Read(object):
         assert self.counts > 0
         if self.bqs is not None:
             assert len(self.seq) == len(self.bqs)
-    
+
     def print(self):
         """
         Pretty print Read.
@@ -85,7 +108,7 @@ class Read(object):
             self.bqs = self.bqs[substr_index:]
             self.length = len(self.seq)
             return Read(seq=barcode, bqs=barcode_bqs, name=self.name, desc=self.desc, index=self.index, sense=self.sense)
-            
+
 
 
 def read_fastq(fastq_file):
@@ -93,7 +116,7 @@ def read_fastq(fastq_file):
     Read sequence fastq file and extract sequences and BQS.
 
     Args:
-        fastq_file: Name of the fastq file to read, R1 or R2.        
+        fastq_file: Name of the fastq file to read, R1 or R2.
 
     Returns:
         List of Read() objects.
@@ -136,7 +159,7 @@ def write_fastq(reads, fastq_file):
     # catch missing file or permissions
     except IOError as e:
         print("---\nCould not write fastq file {}!\n---".format(fastq_file))
-    
+
 
 
 
@@ -145,7 +168,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("fastq1", help="FASTQ file of forward reads (REQUIRED)")
     parser.add_argument("fastq2", help="FASTQ file of reverse reads (REQUIRED)")
-    parser.add_argument("sampleID", help="sample ID used as output folder prefix (REQUIRED)")
+    parser.add_argument("sampleID", help="sample ID used as output file prefix (REQUIRED)")
     parser.add_argument("primer1", help="Gene-specific primer sequence of forward reads (REQUIRED)")
     parser.add_argument("primer2", help="Gene-specific primer sequence of reverse reads (REQUIRED)")
     cmd_args = parser.parse_args()
@@ -161,7 +184,7 @@ if __name__ == '__main__':
 
     reads = read_fastq(R1)
     reverse_reads = read_fastq(R2)
-    
+
     for read in reverse_reads:
         read.sense = -1
 
@@ -176,7 +199,7 @@ if __name__ == '__main__':
 
     barcodes = [barcode for barcode in barcodes if barcode is not None]
     reverse_barcodes = [barcode for barcode in reverse_barcodes if barcode is not None]
-    
+
     print("Forward reads with primer: {}".format(len(barcodes)))
     print("Reverse reads with primer: {}".format(len(reverse_barcodes)))
 
@@ -211,11 +234,11 @@ if __name__ == '__main__':
         full_barcode.bqs = pb.bqs + prb.bqs
         full_barcode.length = len(full_barcode.seq)
         passing_full_barcodes.append(full_barcode)
-        
+
 
     ##################################
     ## FOR READS AND BARCODES WITH SUCH AN INDEX, WRITE FASTQ FILES
-    
+
     write_fastq(passing_reads, SAMPLE + "_indexed_R1.fastq")
     write_fastq(passing_reverse_reads, SAMPLE + "_indexed_R2.fastq")
     write_fastq(passing_barcodes, SAMPLE + "_indexed_I1.fastq")
