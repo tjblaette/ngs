@@ -1,5 +1,23 @@
 #!/bin/bash
 
+####
+# T.J.Blätte
+# 2016
+####
+#
+# Wrapper script for poretools to convert Oxford nanopore FAST5
+#       files to FASTQ format. Several other functions are called
+#       to generate some statistics on the data.
+#
+# Args:
+#   DIR: Folder containing the FAST5 data to be converted.
+#
+# Output:
+#   Several output files, all prefixed with the input directory's
+#       basename, including FASTQ, PDF and various other text files.
+#
+####
+
 
 DIR="$1"
 DIRNAME="$(basename "$DIR")"
