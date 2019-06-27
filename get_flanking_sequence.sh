@@ -1,17 +1,47 @@
 #!/bin/sh
 
-#$1=file to annotate
-#$2=reference genome to use (use the same one as for the variant calling!)
-#$3=number of surrounding bases to print
+####
+# T.J.Blätte
+# 2015
+####
+#
+# Annotate mutations with flanking reference sequence.
+#       Input files are expected in CSV format as
+#       output by our mutation calling pipelines.
+#       Two columns are added to the input file, with
+#       left and right flanking sequences of a given length.
+#
+#       ** Input files are overwritten! **
+#
+# Args:
+#   IN: File with mutations to annotate.
+#   REF: Reference genome to extract the flanking sequence from,
+#       must match the reference used during alignment and variant
+#       calling of the mutations.
+#   LEN: Number of flanking bases to annotate on either side of the
+#       given mutations.
+#
+# Output:
+#   Input files are annotated in-place and overwritten!
+#
+####
 
+IN="$1"
+REF="$2"
+LEN="$3"
+TMP=${IN}_tmp
+
+
+# print date and time of when analysis is started
 echo "$(date) running $0"
+
 
 get_flanking () {
 #$1 = chrom
-#$2 = Pos
-#$3 = Reference genome fasta
-#$4 = Number of surrounding bases to print
-##NOTE: The last base of the left flanking sequence should always equal the reference base at that position --> control for correctness flanking sequences!)
+#$2 = pos
+#$3 = reference genome fasta
+#$4 = number of surrounding bases to print
+#$5 = input file to annotate
 
 chr="$1"
 pos=$2
@@ -28,7 +58,7 @@ then
 fi
 
 #number of bases per line in reference fasta (50 for GATK's ucsc.hg19 but 60 for the other hg19!)
-width=$( head -2 $ref | wc -L ) 
+width=$( head -2 $ref | wc -L )
 
 #parse non-number-chromosomes (and make sure all others are matched correctly too!)
 if [ ! -e ${ref}_chromosomes.txt ]
@@ -54,7 +84,7 @@ lines_before=$(( $(sed $chr'q;d' ${ref}_linesPerChr.txt) +1 ))
 lines_broken=$(( $pos / $width ))
 line=$(( $lines_before + $lines_broken ))
 
-start=$(( $pos % $width -1)) 
+start=$(( $pos % $width -1))
 #start=$(( $pos % $width - $4))
 
 if [ $start -lt 0 ]
@@ -104,17 +134,18 @@ fi
 
 }
 
-head -n 1 $1 | sed -e 's/?$/,left_flanking_seq,right_flanking_seq/' > ${1}_tmp
+head -n 1 $IN | sed -e 's/?$/,left_flanking_seq,right_flanking_seq/' > $TMP
 
-tail -n +2 $1 | while read line
+tail -n +2 $IN | while read line
 do
-                chrom=$(echo $line | sed 's/"//g' | cut -f1 -d',') 
+                chrom=$(echo $line | sed 's/"//g' | cut -f1 -d',')
                 indel_length=$(echo $line | sed 's/"//g' | cut -f5 -d',' | grep '-' | sed 's/^-\([ATCG]*\)/\1/' | wc -L)
 		indel_begin=$(echo $line | sed 's/"//g' | cut -f2 -d',' )
-                left=$(( $indel_begin - $3 )) 
-                right=$(( $indel_begin +  $indel_length )) 
-                echo "${line},\"$(get_flanking $chrom $left $2 $3 $1)\",\"$(get_flanking $chrom $right $2 $3 $1)\"" >> ${1}_tmp
+                left=$(( $indel_begin - $LEN ))
+                right=$(( $indel_begin +  $indel_length ))
+                echo "${line},\"$(get_flanking $chrom $left $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" >> $TMP
 done
 
-mv ${1}_tmp ${1}
+# overwrite input file with tmp output
+mv $TMP $IN
 
