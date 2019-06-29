@@ -1,10 +1,26 @@
 #!/bin/bash
 
-# given a threshold ALPHA and one or multiple DESeq2 output files (*woutNA.txt), output DEGs (based on ALPHA) shared by all DESeq2 output files given
-# --> if only one file is given, output DEGs of that file
-# --> if multiple files are given, output DEGs present in all of these
+####
+# T.J.Blätte
+# 2018
+####
+#
+# Based on a specified FDR cutoff, return the significantly
+#       differentially expressed genes shared by one or
+#       more DESeq2 analysis result tables.
+#
+# Args:
+#   ALPHA: FDR cutoff for statistical significance of differentially
+#       expressed genes.
+#   [...]: All other inputs are DESeq2 result tables (*woutNA.txt),
+#       from which significantly differentially expressed genes shared
+#       by *all* of the provided files are printed to stdout.
+#
+####
 
-# test that sufficient input was given (at least ALPHA and one DESeq2 output file)
+
+# test that sufficient input was given
+# -> at least ALPHA and one DESeq2 output file
 if [ ! -n "$1" ] || [ ! -n "$2" ]
 then
     echo -e "At least two arguments must be passed:\n\t- ALPHA cutoff to filter DEGs\n\t-INPUT FILE from DESeq2 (*woutNA.txt)"
