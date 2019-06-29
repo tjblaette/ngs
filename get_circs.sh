@@ -1,10 +1,35 @@
 #!/bin/bash
 
+####
+# T.J.Blätte
+# 2015
+####
+#
+# Extract circular RNAs from STAR alignment.
+#
+# Args:
+#   IN: File containing chimeric junctions discovered by STAR.
+#   CHIMSAM: File containing chimeric reads discovered by STAR.
+#   STRANDED: Boolean, whether to use strand information in defining
+#       circRNA junctions - default is false, which means that reads
+#       containing a circRNA backsplice junction are collapsed and
+#       counted together regardless of the strand they are mapped to.
+#
+#       ** Stranded (True) is not yet supported! **
+#   VAL: File containing known circRNAs for validation. Defaults to
+#       a list of circRNAs published by Menczak et al.
+#
+# Output:
+#   Several output files are written, prefixed with the filename of IN.
+#   Primary output of interest is ${IN}_circsAnnotatedFinal.txt
+#
+####
 
-IN="$1" #INPUT file with chimeric junctions discovered by STAR
-CHIMSAM="$2" # INPUT file with chimeric reads discovered by STAR
+
+IN="$1"
+CHIMSAM="$2"
 STRANDED="${3:-false}"
-VAL=${4:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'} #INPUT file with known circRNAs for validation
+VAL=${4:-'/NGS/known_sites/hg19/circ_rna/hsa_hg19_Memczak2013_HEK293.bed'}
 
 
 # extract circRNAs from STAR chimeric output
