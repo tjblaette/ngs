@@ -3,12 +3,15 @@
 ####
 # T.J.Blätte
 # S. Lux
-# 2016
+# 2019
 ####
 #
 # Generates read count files to input into DESeq2,
 #       whose format is based on that of HTSeq.
-#       Counts are for circular RNAs / backsplice junctions.
+#       Counts are for circular RNA / backsplice
+#       alternative linear junctions, which are linear
+#       junctions involving either the backsplice donor
+#       or acceptor.
 #
 # Args:
 #   PREFIX: Prefix for output files.
@@ -22,10 +25,12 @@
 #       with zero counts in the other samples' files.
 #
 # Output:
-#   $PREFIX_circs.tsv: Read counts of each circular RNA / backsplice.
-#   $PREFIX_circs-per-gene.tsv: Read counts of circular RNAs / backsplices
-#       discovered per gene - when multiple circular RNAs / backsplices
-#       are detected within the same gene, counts are summed.
+#   $PREFIX_linear-alternatives.tsv: Read counts of the linear alternative
+#       of each circular RNA / backsplice.
+#   $PREFIX_linear-alternatives-per-gene.tsv: Read counts of the linear
+#       alternatives of each circular RNA / backsplice on a per-gene basis.
+#       When multiple circular RNAs / backsplices are detected within
+#       the same gene, counts are summed.
 #
 ####
 
@@ -33,8 +38,8 @@
 PREFIX=$1
 #SAMPLES= ALL OTHER INPUTS
 
-KEY="${PREFIX}_circs_key.tsv"
-LIST="${PREFIX}_circs_list.tsv"
+KEY="${PREFIX}_linear-alternatives_key.tsv"
+LIST="${PREFIX}_linear-alternatives_list.tsv"
 
 mkdir -p intermediate_files
 
@@ -53,12 +58,13 @@ do
     echo "$FILE"
     # prepare sample
     # -> columns 1-3 are chr, start, stop coordinates of the backsplice
-    # -> column 5 is the number of circular reads supporting the junction
-    SAMPLE="$(tail -n +2 "$FILE" | cut -f1-3,5 | sed -e 's/\t/_/' -e 's/\t/_/' | sort | uniq)"
+    # -> column 8 is the mean of the number of reads supporting the alternative linear junction
+    #    of the splice donor and acceptor, respectively
+    SAMPLE="$(tail -n +2 "$FILE" | cut -f1-3,8 | sed -e 's/\t/_/' -e 's/\t/_/' | sort | uniq)"
     SAMPLE_LONG="$(cat <(echo "$SAMPLE") "$LIST" | sort)"
 
-    UNIFORM="intermediate_files/$(basename ${FILE%.tsv}_circs.counts)"
-    ENSEMBL="intermediate_files/$(basename ${FILE%.tsv}_circs-per-gene.counts)"
+    UNIFORM="intermediate_files/$(basename ${FILE%.tsv}_linear-alternatives.counts)"
+    ENSEMBL="intermediate_files/$(basename ${FILE%.tsv}_linear-alternatives-per-gene.counts)"
 
     echo "$SAMPLE_LONG" | awk -v OFS='\t' '{if(PREV==0){PREV=$1;} ID=$1; if(ID==PREV){SUM=SUM+$2}else{print(PREV,SUM); SUM=$2;}; PREV=ID;} END {print(ID,SUM);}' > $UNIFORM
 
@@ -80,12 +86,12 @@ done
 
 # create DESeq2 dummy design table
 # -> one with counts per circRNA junction, one with counts per gene / ENSEMBL ID
-echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_circs.tsv
-ls -C intermediate_files/*_circs.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_circs.tsv
+echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_linear-alternatives.tsv
+ls -C intermediate_files/*_linear-alternatives.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives.tsv
 
 
-echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_circs-per-gene.tsv
-ls -C intermediate_files/*_circs-per-gene.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_circs-per-gene.tsv
+echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_linear-alternatives-per-gene.tsv
+ls -C intermediate_files/*_linear-alternatives-per-gene.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives-per-gene.tsv
 
 
 rm "$LIST"
