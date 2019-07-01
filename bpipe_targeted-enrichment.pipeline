@@ -1,0 +1,26 @@
+//file containing Bpipe call for WES pipeline
+
+
+// LOAD STAGES
+load 'bpipe_dna.stages'
+
+// LOAD CONFIG
+load 'bpipe_exome.config'
+
+
+Bpipe.run {
+	getVersions + 
+	"%_R*.fastq" * [ qc ] +
+	"%_R*.fastq" * [
+                            alignMEM +
+                            processPICARD +
+                            realignGATK +
+                            [ coverBED,  mpileupSAMpad ]
+        ] + somVARSC +
+	"*.somVARSC.%" * [ processVARSC ] + 
+	"*.somVARSC.%.%" * [ fixFormat ] +
+	"%.fixed" * [  tableANNOVAR ]  + merged + 
+	"*R1%merged.csv" * [ filterOutput ] +
+        "%_R*.fastq" * [ cleanUp ]
+}
+
