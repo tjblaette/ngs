@@ -8,7 +8,7 @@ load 'bpipe_dna.stages'
 load 'bpipe_exome_mouse.config'
 
 Bpipe.run {
-	getVersions + 
+	getVersions +
 	"%_R*.fastq" * [ qc ] +
 	"%_R*.fastq" * [
                             alignMEM +
@@ -17,8 +17,8 @@ Bpipe.run {
                             [ coverBED, mpileupSAMpad ]
         ] + somVARSC +
 	"*.somVARSC.%" * [ processVARSC ] +
-	"*.somVARSC.%.%" * [ fixFormat ] + 
-	"%.fixed" * [ tableANNOVARmm10 ] + merged + 
+	"*.somVARSC.%.%" * [ fixFormat ] +
+	"%.fixed" * [ tableANNOVARmm10 ] + merged +
 	"*R1%merged.csv" * [ filterOutput ] +
         "%_R*.fastq" * [ cleanUp ]
 }

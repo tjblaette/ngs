@@ -7,7 +7,7 @@ SAMPLE=$(echo "$SAMPLE" | cut -f1 -d'R')
 
 # add columns to variant CSVs to collect information of manual inspection
 if [ -e results_csv/ ]
-then 
+then
   for file in results_csv/${SAMPLE}*csv
   do
     if [ -e "$file" ]

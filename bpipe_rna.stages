@@ -15,22 +15,22 @@ qc = {
 
 
 alignSTAR = {
-        var nkern : 48 
+        var nkern : 48
         output.dir="intermediate_files"
         exec """$STAR
                 --runThreadN $nkern
-                --genomeDir $REFDIR 
+                --genomeDir $REFDIR
                 --twopassMode Basic
 		--quantMode GeneCounts
                 --outStd BAM_SortedByCoordinate
                 --outSAMtype BAM SortedByCoordinate
                 --outFileNamePrefix ./.$input1.fastq.prefix
                 --outSAMunmapped Within
-                --outSAMmapqUnique 60 
+                --outSAMmapqUnique 60
                 --outSAMattrRGline ID:0 PL:ILLUMINA LB:rna SM:$input1.fastq.prefix
-                --outSAMstrandField intronMotif 
+                --outSAMstrandField intronMotif
                 --outSAMattributes NH HI AS nM NM
-		--chimSegmentMin 15   
+		--chimSegmentMin 15
     		--chimJunctionOverhangMin 15
                 --readFilesIn  $input1.fastq $input2.fastq > $output.bam"""
 }

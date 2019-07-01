@@ -6,14 +6,14 @@
 ####
 #
 # Filter the mutations output by our bpipe
-#       pipelines and annotate them with 
+#       pipelines and annotate them with
 #       flanking reference sequence of a
 #       given length.
 #
 # Args:
 #   IN: Input CSV file to be filtered and
 #       annotated, as output by our pipelines.
-#   OUT: Output prefix for filtered and 
+#   OUT: Output prefix for filtered and
 #       annotated files.
 #   CANDIDATES: List of candidate genes,
 #       quoted, one per line.
@@ -32,7 +32,7 @@
 #   $OUT_*filtered*csv: Filtered CSV files at various steps
 #       of filtering.
 #   $OUT_filter_statistics.txt: Stats on the number of
-#       mutations filtered and retained at each step. 
+#       mutations filtered and retained at each step.
 #       of the collected and merged statistics.
 #   $OUT_candidates.txt: Separate file with variants
 #       affecting the provided candidate genes of interest.
@@ -78,7 +78,7 @@ echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 #take out reads with tumor_reads2 < 4
 #sed '/^\([^,]*,\)\{17\}[0-3],/d' ${OUT}_filtered_somatic.csv > tumorreads2min4
-sed -i -e '/^\([^,]*,\)\{17\}"[0-3]",/d' ${OUT}_filtered_somatic.csv 
+sed -i -e '/^\([^,]*,\)\{17\}"[0-3]",/d' ${OUT}_filtered_somatic.csv
 echo $(($lines - $(wc -l ${OUT}_filtered_somatic.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2 < 4 and were dropped" >> ${OUT}_filter_statistic.txt
 lines=$(( $(wc -l ${OUT}_filtered_somatic.csv | cut -f1 -d' ') -1))
 echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
@@ -111,7 +111,7 @@ lines="$(( $(wc -l ${OUT}_filtered_somatic.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering and are saved to ${OUT}_filtered_somatic.csv" >> ${OUT}_filter_statistic.txt
 
 #add annotation for flanking sequences
-get_flanking_sequence.sh ${OUT}_filtered_somatic.csv $REF $FLANKING_SEQ_LEN 
+get_flanking_sequence.sh ${OUT}_filtered_somatic.csv $REF $FLANKING_SEQ_LEN
 
 #split files according to normal_var_freq
 head -n 1 $IN > ${OUT}_filtered_somatic_true.csv
@@ -190,36 +190,36 @@ grep 'LOH' ${OUT}_filtered.csv | grep -v '"synonymous' >> ${OUT}_filtered_LOH.cs
 echo "" >> ${OUT}_filter_statistic.txt
 echo "$(grep -c 'LOH' ${OUT}_filtered.csv) of these calls were classified as LOH" >> ${OUT}_filter_statistic.txt
 echo "$(grep 'LOH' ${OUT}_filtered.csv | grep -c '"synonymous') of these were synonymous and dropped" >> ${OUT}_filter_statistic.txt
-lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 #take out reads with tumor_reads2 < 4
 sed -i -e '/^\([^,]*,\)\{17\}"[0-3]",/d' ${OUT}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2 < 4 and were dropped" >> ${OUT}_filter_statistic.txt
-lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 #take out calls that have an entry for GenomicSuperDups-DB
 sed -i -e '/^\([^,]*,\)\{10\}"[^\.]/d' ${OUT}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had an entry for GenomicSuperDups-DB and were dropped" >> ${OUT}_filter_statistic.txt
-lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 ##take out calls that have an entry for dbsnp and not for cosmic
 #sed -i -e '/^\([^,]*,\)\{13\}"[^\(\.\)"][^,]*,"\."/d' ${OUT}_filtered_LOH.csv
 #echo $(($lines - $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had an entry for SNP-DB but not for cosmic-DB and were dropped" >> ${OUT}_filter_statistic.txt
-#lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+#lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 #echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 #take out snps with 0 tumor_reads2_plus and 0 tumor_reads2_minus
 sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{20\}"0"/d' ${OUT}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_plus = 0 and were dropped" >> ${OUT}_filter_statistic.txt
-lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering" >> ${OUT}_filter_statistic.txt
 
 sed -i -e '/^\([^,]*,\)\{3\}"[A-Z]","[A-Z]",\([^,]*,\)\{21\}"0"/d' ${OUT}_filtered_LOH.csv
 echo $(($lines - $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') +1)) " of these calls had tumor_reads2_minus = 0 and were dropped" >> ${OUT}_filter_statistic.txt
-lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))" 
+lines="$(( $(wc -l ${OUT}_filtered_LOH.csv | cut -f1 -d' ') -1))"
 echo "$lines calls remain after filtering and are saved to ${OUT}_filtered_LOH.csv" >> ${OUT}_filter_statistic.txt
 
 #add annotation for flanking sequences

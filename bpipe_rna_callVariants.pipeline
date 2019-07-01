@@ -10,7 +10,7 @@ load 'bpipe_rna_callVariants.config'
 
 
 Bpipe.run {
-	getVersions + 
+	getVersions +
 	"%_R*.fastq" * [ qc ] +
         "%_R*.fastq" * [
                             alignSTAR +

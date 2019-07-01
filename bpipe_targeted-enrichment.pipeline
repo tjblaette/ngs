@@ -9,7 +9,7 @@ load 'bpipe_exome.config'
 
 
 Bpipe.run {
-	getVersions + 
+	getVersions +
 	"%_R*.fastq" * [ qc ] +
 	"%_R*.fastq" * [
                             alignMEM +
@@ -17,9 +17,9 @@ Bpipe.run {
                             realignGATK +
                             [ coverBED,  mpileupSAMpad ]
         ] + somVARSC +
-	"*.somVARSC.%" * [ processVARSC ] + 
+	"*.somVARSC.%" * [ processVARSC ] +
 	"*.somVARSC.%.%" * [ fixFormat ] +
-	"%.fixed" * [  tableANNOVAR ]  + merged + 
+	"%.fixed" * [  tableANNOVAR ]  + merged +
 	"*R1%merged.csv" * [ filterOutput ] +
         "%_R*.fastq" * [ cleanUp ]
 }

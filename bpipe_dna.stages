@@ -29,7 +29,7 @@ qc = {
     exec "$QC -pe $output1.subsample $output2.subsample 2 A -c $nkern -onlyStat -o FASTQ_QC && touch $output.success"
 }
 
-trim = { 
+trim = {
     //trim reads in fastq by triml bases on the left and trimr bases on the right (also adjust bqs!)
     var triml : 0
     var trimr : 0
@@ -52,17 +52,17 @@ cutadapt = {
 
 alignMEM = {
     //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
-    var nkern : 24 
+    var nkern : 24
     output.dir="intermediate_files"
-    exec """$BWA mem 
+    exec """$BWA mem
 	-M
-        -t $nkern 
-	-R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome" 
+        -t $nkern
+	-R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome"
         $REF
         $input1.fastq
-        $input2.fastq | sed -e '/^@PG/s/\t/ /5' 
-                		-e '/^@PG/s/\t/ /5' 
-               			-e '/^@PG/s/\t/ /5' 
+        $input2.fastq | sed -e '/^@PG/s/\t/ /5'
+                		-e '/^@PG/s/\t/ /5'
+               			-e '/^@PG/s/\t/ /5'
                 		-e '/^@PG/s/\t/ /5' | $PICARD SortSam
                                                         INPUT=/dev/stdin
                                                         OUTPUT=$output.bam
@@ -100,7 +100,7 @@ dedupSAM = {
 
 sortPIC = {
     output.dir="intermediate_files"
-    exec """  
+    exec """
 	$PICARD SortSam
         INPUT=$input.bam
         OUTPUT=$output.bam
@@ -282,7 +282,7 @@ processPICARD = segment {
 
 
 runPINDEL = {
-    var nkern : 24 
+    var nkern : 24
     var region : 'chr13:28,577,689-28,675,147'
     output.dir="intermediate_files"
     exec "$SAMTOOLS view -hb $input.bam $region > $output.bam"
@@ -335,7 +335,7 @@ runEXOME_PINDEL = segment {
 	processPICARD +
 	realignGATK +
 	indexSAM +
-	runPINDEL 
+	runPINDEL
 }
 
 
@@ -387,9 +387,9 @@ somVARSCunpaired = {
         --min-freq-for-hom 0.75
         --normal-purity 1.0
         --tumor-purity 1.0
-        --p-value 0.99 
+        --p-value 0.99
         --somatic-p-value 0.05"""
-}  
+}
 
 processVARSC = {
     produce(input + ".Germline", input + ".LOH", input + ".Somatic") {

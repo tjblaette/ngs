@@ -6,14 +6,14 @@
 ####
 #
 # Filter the mutations output by our bpipe
-#       pipelines and annotate them with 
+#       pipelines and annotate them with
 #       flanking reference sequence of a
 #       given length.
 #
 # Args:
 #   IN: Input CSV file to be filtered and
 #       annotated, as output by our pipelines.
-#   OUT: Output prefix for filtered and 
+#   OUT: Output prefix for filtered and
 #       annotated files.
 #   CANDIDATES: List of candidate genes,
 #       quoted, one per line.
@@ -32,7 +32,7 @@
 #   $OUT_*filtered*csv: Filtered CSV files at various steps
 #       of filtering.
 #   $OUT_filter_statistics.txt: Stats on the number of
-#       mutations filtered and retained at each step. 
+#       mutations filtered and retained at each step.
 #       of the collected and merged statistics.
 #   $OUT_candidates.txt: Separate file with variants
 #       affecting the provided candidate genes of interest.

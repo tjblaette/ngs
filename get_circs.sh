@@ -145,8 +145,8 @@ awk -v OFS='\t' '$11==$21' ${IN}_exonicJunctions.bed > ${IN}_exonicJunctionsIntr
 awk -v OFS='\t' '$11!=$21' ${IN}_exonicJunctions.bed > ${IN}_exonicJunctionsIntergenic.bed
 
 # extract ambiguous and nonambiguous annotations
-#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed > ${IN}_exonicJunctionsIntragenic_ambiguous.bed 
-#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed 
+#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed > ${IN}_exonicJunctionsIntragenic_ambiguous.bed
+#grep -wf <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed
 awk 'NR==FNR{a[$0]=1; next} {for(i in a){if($7==i){print $0}}} ' <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 > 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_ambiguous.bed
 awk 'NR==FNR{a[$0]=1; next} {for(i in a){if($7==i){print $0}}} ' <(cut -f7 ${IN}_exonicJunctionsIntragenic.bed | sort | uniq -c | awk '$1 == 1 {print $2}') ${IN}_exonicJunctionsIntragenic.bed | sort -k 7b,7 > ${IN}_exonicJunctionsIntragenic_nonambiguous.bed
 
@@ -158,7 +158,7 @@ join -1 16 -2 7 -t'	' ${IN}_circsWcounts.txt ${IN}_exonicJunctionsIntragenic_non
 
 # apply junction shift to junction and read segment coordinates (donor and acceptor only, mate remains unaffected!)
 # for junction shift, difference in +/- is already handled when remembering the change -> what is remembered is the coordinate shift itself irrespective of towards 3' or 5'
-# decrement end coordinates to obtain inclusive ends for GTF format 
+# decrement end coordinates to obtain inclusive ends for GTF format
 # create nicely formatted final output file with header
 #echo -e "supportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\pairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
 awk -v OFS='\t' '{print $2,$3,$4+$28,$7+$28,$8,$9,$32,$17+$28,$18+$28-1,$18-$17,$14,$19+$28,$20+$28-1,$20-$19,$16,$21,$22-1,$22-$21,$12,$28}' ${IN}_circsAnnotated.txt | sort -k1,1nr -k2,2V -k3,3n -k4,4n > ${IN}_circsAnnotatedShifted.txt
@@ -170,8 +170,8 @@ echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tsplic
 echo -e "Index\tsupportingReads\tchr\tspliceDonor\tspliceAcceptor\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedShifted_beyondBS.txt
 echo -e "#chr\tStart\tEnd\tsupportingReads\tIndex\tstrand\tspliceSignal\tgeneSymbol\tdonorSegmentStart\tdonorSegmentEnd\tdonorSegmentLength\tdonorSegmentCIGAR\tacceptorSegmentStart\tacceptorSegmentEnd\tacceptorSegmentLength\tacceptorSegmentCIGAR\tpairedMateStart\tpairedMateEnd\tpairedMateLength\tsupportingReadID\tjunctionShiftApplied" > ${IN}_circsAnnotatedFinal.txt
 
-paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedShifted_withinBS.txt 
-paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '!(($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5))' >> ${IN}_circsAnnotatedShifted_beyondBS.txt 
+paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5)' >> ${IN}_circsAnnotatedShifted_withinBS.txt
+paste <(cut -f2-4 ${IN}_circsAnnotatedShifted.txt | uniq -c | awk '{ for (i=1; i<= $1; i++) print NR}')  ${IN}_circsAnnotatedShifted.txt | awk '!(($6 == "+" && $9>$5 && $14<$4 && $17>$5 && $18<$4) || ($6 == "-" && $10<$5 && $13>$4 && $17>$4 && $18<$5))' >> ${IN}_circsAnnotatedShifted_beyondBS.txt
 
 # convert to 6-column BED (to include strand for stranded protocols)  & get exonic instead of intronic coords
 # start: -1 for STAR to BED, end stays the same for STAR to BED
@@ -229,7 +229,7 @@ else
    # combine read counts and junction file
    paste "${IN}_circsSupportingReadsCount.txt" "${IN}_circsAnnotatedFinal.txt" | awk -v OFS='\t' '{$6=$1; $7=$2; print $0}' | cut -f3- > ${IN}_circsAnnotatedFinal.txt_wCounts && mv ${IN}_circsAnnotatedFinal.txt_wCounts ${IN}_circsAnnotatedFinal.txt
 
-   # update BED file as well -> new index & read counts, do not require strand information 
+   # update BED file as well -> new index & read counts, do not require strand information
    cut -f1-3 ${IN}_circsAnnotatedFinal.txt | uniq > ${IN}_circsAnnotatedFinal.bed
 fi
 
