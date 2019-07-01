@@ -1,7 +1,78 @@
+
+
+####
+# T.J.Blätte
+# 2015
+####
+#
+# Script to run differential gene expression (DGE) analysis
+#   using DESeq2. Heavily based on the DESeq2 manual.
+#   This script is run using deseq2_wrapper.sh and not called
+#   on directly. All input parameter defaults are defined
+#   in the wrapper!
+#
+# Args:
+#   input_file: Design table. A TSV file specifying at least the
+#       columns `fileName`, `sampleName` and the condition
+#       to test on for differential expression. Each line
+#       describes one sample. Filenames must refer to the
+#       respective read count files, which are expected to
+#       reside within the `intermediate_files` subfolder,
+#       within the directory from which the script is run. These
+#       count files are those output by HTSeq or STAR,
+#       following the respective formatting in the latter case.
+#       All of the information provided in this table will be
+#       used to annotate the respective output plots.
+#   my_design: Design formula to test for, something like
+#       `~ condition` for an unpaired analysis or
+#       `~ patient + condition` for a paired analysis.
+#       Provided factors must be defined as columns in input_file.
+#   my_reference_level: The reference level defines relative to what
+#       fold changes are calculated. Typically, this is something
+#       like `untreated`, `control` or similar. The term must
+#       be specified in the condition column of the design table
+#       that is tested.
+#   my_alpha: False discovery rate (FDR) cutoff that defines differentially
+#       expressed genes. Defaults to `0.1`.
+#   my_lfc: The minimum log fold change to test for between groups.
+#       Defaults to `0.6` (1.5 on a linear / non-log scale). Set it
+#       to `0` (1 on a linear / non-log scale) to test for **any**
+#       difference between groups.
+#   output_prefix: Prefix to use for all output files. By default a
+#       combination of input_file and my_design.
+#   gene_id_to_symbol_dict: Database file for ensembl gene ID to gene
+#       symbol conversion, generated / preprocessed by the wrapper script.
+#
+# * Optional input files: *
+#   replace_sizeFactors.txt: File containing size factors calculated
+#       and used by DESeq2 to normalize for different samples' sequencing
+#       depth. If a file with this exact name is present, it will be used
+#       instead of the size factors calculated by DESeq2 during the analysis
+#       of the data in input_file. These files are saved during each analysis,
+#       though with a sample-dependent filename. Rename or symlink them to
+#       replace size factors in a subsequent analysis.
+#   candidates.txt: File containing genes or other features for which a
+#       separate set of output files is to be written. IDs must be provided
+#       one per line and must match those in the count files of input_file.
+#
+# Output:
+#   Several output files are written:
+#       *counts*txt: Tables containing the normalized and
+#        log-transformed read counts of all samples.
+#       *woutNA.txt: Table containing the test statistics, fold changes,
+#        p- and FDR estimates of all genes.
+#       *pdf: PDF plots of principal components 1-6 from PCA and heatmaps
+#        of different hierarchical clusterings, for differentially expressed
+#        genes and increasing subsets of genes with a high coefficient of
+#        variation (CV).
+#
+####
+
+
 args <- commandArgs(TRUE)
 input_file <- args[1]
 my_design <- args[2]
-my_reference_level <- args[3] # factor level to use as the reference for calculated fold changes
+my_reference_level <- args[3]
 my_alpha <- as.numeric(args[4])
 my_lfc <- as.numeric(args[5])
 output_prefix <- args[6]
