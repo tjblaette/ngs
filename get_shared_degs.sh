@@ -56,6 +56,6 @@ then
     exit 0
 else
     # annotate ensembl IDs with gene symbols
-    join -t '  ' <(echo "$SHARED" | sort) <(sed -e 's/_/\t/' -e 's/^\([A-Z0-9]*\)\.[0-9]*/\1/' "$2" | cut -f1-2 | sort)
+    join -t '	' <(echo "$SHARED" | sort) <(sed -e 's/_/\t/' -e 's/^\([A-Z0-9]*\)\.[0-9]*/\1/' "$2" | cut -f1-2 | sort)
 fi
 
