@@ -38,13 +38,15 @@ fi
 ALPHA=$1
 
 # extract DEGs within the first input file passed
-SHARED="$(awk -v alpha=$ALPHA '$8 <= alpha' "$2" | cut -f1)"
+# -> replace _ by tab to convert new DESeq2 format to old
+#    (new contains ensemblID_geneSymbol in column 1, old contains the same in two columns)
+# => necessary to make script compatible with both old and new files and even a mixture of the two
+SHARED="$(sed -e 's/_/\t/' -e 's/^\([A-Z0-9]*\)\.[0-9]*/\1/' "$2" | awk -v alpha=$ALPHA '$8 <= alpha' | cut -f1)"
 
 # for each additional input file, select shared DEGs between $SHARED and the additional input file
 for i in "${@:3}"
 do
-    SHARED="$(grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 <= alpha' "$i" | cut -f1))"
-    #grep -xf <(echo "$SHARED") <(awk -v alpha=$ALPHA '$8 <= alpha' "$i" | cut -f1)
+    SHARED="$(grep -xf <(echo "$SHARED") <(sed -e 's/_/\t/' -e 's/^\([A-Z0-9]*\)\.[0-9]*/\1/' "$i" | awk -v alpha=$ALPHA '$8 <= alpha' | cut -f1))"
 done
 
 # print final shared DEGs
@@ -54,6 +56,6 @@ then
     exit 0
 else
     # annotate ensembl IDs with gene symbols
-    join -t '	' <(echo "$SHARED" | sort) <(cut -f1-2 "$2" | sort)
+    join -t '  ' <(echo "$SHARED" | sort) <(sed -e 's/_/\t/' -e 's/^\([A-Z0-9]*\)\.[0-9]*/\1/' "$2" | cut -f1-2 | sort)
 fi
 
