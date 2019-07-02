@@ -14,7 +14,7 @@ This repository contains the collection of next-generation (NGS) analysis script
 
 ## Author / Support
 T.J. Blätte \
-tamara.blaette@uni-ulm.de
+tamara.blaette@charite.de
 
 
 ## Overview
