@@ -47,13 +47,18 @@ GSEA_JAR="/NGS/gsea/newest/gsea-3.0.jar"
 if [ "$(head -n1 "$IN" | cut -f1)" == "geneID_geneSymbol" ]
 then
     join -t '	'  <(tail -n +2 $DB | sort -k1,1b) <(tail -n +2 $IN | sed 's/\.[^\t]*//' | sort -k1,1b) > ${IN%.txt}_geneSymbols.txt
+
+    # Prepare preranked gene list for GSEA
+    #  Here: $2 = HUGO gene symbol, $4 = logFC
+    awk -v OFS='\t'	'{print($2,$4)}' ${IN%.txt}_geneSymbols.txt > ${IN%.txt}_forGSEA_lfc.rnk
 else
     join -t '	'  <(tail -n +2 $DB | sort -k1,1b) <(tail -n +2 $IN | sort -k1,1b) > ${IN%.txt}_geneSymbols.txt
+
+    # Prepare preranked gene list for GSEA
+    #  Here: $2 = HUGO gene symbol, $5 = logFC
+    awk -v OFS='\t'	'{print($2,$5)}' ${IN%.txt}_geneSymbols.txt > ${IN%.txt}_forGSEA_lfc.rnk
 fi
 
-# Prepare preranked gene list for GSEA
-#  Here: $2 = HUGO gene symbol, $5 = logFC
-awk -v OFS='\t'	'{print($2,$5)}' ${IN%.txt}_geneSymbols.txt > ${IN%.txt}_forGSEA_lfc.rnk
 
 # Run GSEA once for each gene set
 # GSEA will fail if JAVA tmp folder does not exist -> create it now
