@@ -317,7 +317,7 @@ Count files `*_linear-alternatives.counts` and `*_linear-alternatives-per-gene.c
 
 ## Additional helper scripts
 
-## Sub-sampling paired FASTQ files
+### Sub-sampling FASTQ files
 To extract a random set of `n` reads, use the `sample_fastqs.sh` script.
 It takes as input the two paired FASTQ files to subsample and the number of reads to extract.
 Thus, the command to extract 100 reads would be:
