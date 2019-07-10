@@ -317,6 +317,20 @@ Count files `*_linear-alternatives.counts` and `*_linear-alternatives-per-gene.c
 
 ## Additional helper scripts
 
+## Sub-sampling paired FASTQ files
+To extract a random set of `n` reads, use the `sample_fastqs.sh` script.
+It takes as input the two paired FASTQ files to subsample and the number of reads to extract.
+Thus, the command to extract 100 reads would be:
+
+```
+sample_fastqs.sh \
+        your-input_R1.fastq \
+        your-input_R2.fastq \
+        100
+```
+
+Two output files will be written, one for each input file, containing the respectively extracted reads. Their filename prefix will be `your-input`, the suffix will contain the number of reads extracted together with a timestamp, dedicating the day, hour, minute and second that the script was run at. This serves to distinguish individual subsamples created from the same pair of original FASTQ files.
+
 ### Finding shared differentially expressed genes (DEGs)
 The `get_shared_degs.sh` scripts takes as input an FDR cutoff and one or more DESeq2 result tables.
 When one table is given, it returns all those genes which are differentially expressed with an FDR at or below the given cutoff.
