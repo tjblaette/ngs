@@ -32,10 +32,8 @@
 BED=$1
 REFFAI=$2
 
-## sort BED file
-# create genome file from REFFAI
-cut -f1-2 /NGS/refgenome/GATK/ucsc.hg19.fasta.fai > ${REFFAI%.fai}.genomeFile
 
+## sort BED file
 rm -f ${BED%.bed}_sorted.bed
 
 cut -f1 $REFFAI |
@@ -44,10 +42,10 @@ do
 	echo "$CONTIG"
 	grep -w "$CONTIG" $BED | sort -k1,1 -k2,2n | uniq >> ${BED%.bed}_sorted.bed
 done
-
 echo "Done sorting!"
 
-## add 5bp padding to each interval in the BED file so that we can safely restrict variant calling to that area
-awk -v OFS='\t' '!/browser|track/ {$2=$2-5; $3=$3+5; print $0} /browser|track/' ${BED%.bed}_sorted.bed > ${BED%.bed}_sorted.bed_padded
 
+## add 5bp padding to each interval in the BED file
+#  so that we can safely restrict variant calling to that area
+awk -v OFS='\t' '!/browser|track/ {$2=$2-5; $3=$3+5; print $0} /browser|track/' ${BED%.bed}_sorted.bed > ${BED%.bed}_sorted.bed_padded
 echo "Done padding!"

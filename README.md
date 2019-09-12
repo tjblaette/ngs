@@ -331,6 +331,21 @@ sample_fastqs.sh \
 
 Two output files will be written, one for each input file, containing the respectively extracted reads. Their filename prefix will be `your-input`, the suffix will contain the number of reads extracted together with a timestamp, dedicating the day, hour, minute and second that the script was run at. This serves to distinguish individual subsamples created from the same pair of original FASTQ files.
 
+### Sorting & Padding BED files
+All BED files must be sorted before they can be passed to our pipelines by chromosome contig and coordinate.
+This can be done using the `sort_bed.sh` script, which takes as input the BED file to be sorted and the reference genome index file (.fai), which defines the proper order of reference contigs:
+
+```
+sort_bed.sh \
+        your-input.bed \
+        your-reference-genome-index.fai
+```
+
+In addition to a sorted BED file, `sort_bed.sh` also generates a padded BED file, which is also sorted, whose entries are extended by 5 bp each in both the 3' and 5' direction.
+These padded BED files are required by targeted-enrichment pipeline to limit variant calling to the actual targets but include directly adjacent flanking regions as well, whose coverage is often also sufficent for analysis.
+
+
+
 ### Finding shared differentially expressed genes (DEGs)
 The `get_shared_degs.sh` scripts takes as input an FDR cutoff and one or more DESeq2 result tables.
 When one table is given, it returns all those genes which are differentially expressed with an FDR at or below the given cutoff.
