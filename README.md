@@ -317,6 +317,19 @@ Count files `*_linear-alternatives.counts` and `*_linear-alternatives-per-gene.c
 
 ## Additional helper scripts
 
+### Preparing the DNA pipelines' reference genome index files
+To generate the various genome index files required for the DNA-based pipelines, use `make_genome_files.sh`:
+
+```
+make_genome_files.sh \
+        your-reference-genome.fasta
+```
+
+This script, which must be run once for each reference genome that is to be used, will generate the general index file (.fai), the dictionary file required by GATK (.dict), the genome file required by BEDTools (.genomeFile) and the many index files required by BWA.
+Note that this script itself require samtools, picard and bwa and will only generate the index files required for our DNA pipelines.
+STAR, which is used as part of the RNA pipelines, must be used explicitely to create its own index.
+
+
 ### Sub-sampling FASTQ files
 To extract a random set of `n` reads, use the `sample_fastqs.sh` script.
 It takes as input the two paired FASTQ files to subsample and the number of reads to extract.
@@ -340,6 +353,7 @@ sort_bed.sh \
         your-input.bed \
         your-reference-genome-index.fai
 ```
+In case the index file does not exist yet, it can be created with the `make_genome_files.sh` script as described above.
 
 In addition to a sorted BED file, `sort_bed.sh` also generates a padded BED file, which is also sorted, whose entries are extended by 5 bp each in both the 3' and 5' direction.
 These padded BED files are required by targeted-enrichment pipeline to limit variant calling to the actual targets but include directly adjacent flanking regions as well, whose coverage is often also sufficent for analysis.
