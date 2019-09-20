@@ -29,7 +29,7 @@ rm -f intermediate_files/${SAMPLE}*dedupPIC.ba*
 rm -f intermediate_files/${SAMPLE}*alignMEM*dedupOptPIC.ba* # final BAM for RNA pipeline, delete for DNA only (which ends on GATK realignment)
 rm -f intermediate_files/${SAMPLE}*.coverBED_exon.txt
 rm -f intermediate_files/${SAMPLE}*otherinfo*
-rm -f results_varscan/${SAMPLE}*fixFormat*
+rm -f results_varscan/${SAMPLE}*fixFormat.tsv
 rm -f results_csv/${SAMPLE}*_PREcandidates.csv
 #rm -rf tmp/
 #rm -rf JAVA_TMP/

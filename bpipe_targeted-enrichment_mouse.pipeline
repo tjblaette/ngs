@@ -17,8 +17,7 @@ Bpipe.run {
                             [ coverBED, mpileupSAMpad ]
         ] + somVARSC +
 	"*.somVARSC.%" * [ processVARSC ] +
-	"*.somVARSC.%.%" * [ fixFormat ] +
-	"%.fixed" * [ tableANNOVARmm10 ] + merged +
+	"*.somVARSC.%.%" * [ fixFormat + tableANNOVARmm10 ] + merged +
 	"*R1%merged.csv" * [ filterOutput ] +
         "%_R*.fastq" * [ cleanUp ]
 }
