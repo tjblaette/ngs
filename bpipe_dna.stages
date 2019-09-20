@@ -51,23 +51,19 @@ cutadapt = {
 
 
 alignMEM = {
-    //bpipe causes additional tabs in the samfile-header which is not good as it is supposed to be tab-deliminated for field-tags -> this sed reduces these additional tabs to spaces
     var nkern : 24
     output.dir="intermediate_files"
     exec """$BWA mem
 	-M
         -t $nkern
-	-R "@RG\tID:$input1.prefix\tSM:$input1.prefix\tPL:illumina\tCN:exome"
+	-R "@RG\\tID:$input1.prefix\\tSM:$input1.prefix\\tPL:illumina\\tCN:exome"
         $REF
         $input1.fastq
-        $input2.fastq | sed -e '/^@PG/s/\t/ /5'
-                		-e '/^@PG/s/\t/ /5'
-               			-e '/^@PG/s/\t/ /5'
-                		-e '/^@PG/s/\t/ /5' | $PICARD SortSam
-                                                        INPUT=/dev/stdin
-                                                        OUTPUT=$output.bam
-                                                        CREATE_INDEX=true
-                                                        SORT_ORDER=coordinate"""
+        $input2.fastq | $PICARD SortSam
+                                    INPUT=/dev/stdin
+                                    OUTPUT=$output.bam
+                                    CREATE_INDEX=true
+                                    SORT_ORDER=coordinate"""
       // forward input fastqs so that input3.fastq reaches dedupByBarcode stage for haloplexHS
       forward(output.bam, inputs.fastq)
 }
