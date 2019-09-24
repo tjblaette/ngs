@@ -6,7 +6,7 @@ NGS="/NGS" //symlink to respective folder
 
 // PROGRAM DIRECTORIES
 ANNOVAR="/NGS/links/annovar"
-BEDTOOLS="/NGS/links/bedtools"
+BEDTOOLS="bedtools"
 BWA="bwa"
 CUTADAPT="cutadapt"
 FGBIO="fgbio"
@@ -169,7 +169,7 @@ umiToBam = {
 coverBED = {
     output.dir="intermediate_files"
     var target_region : TARGET_REGION
-    exec "${BEDTOOLS}/coverageBed -b $input.bam -a $target_region -hist -sorted -g ${REF}.genomeFile > $output.txt"
+    exec "$BEDTOOLS coverage -b $input.bam -a $target_region -hist -sorted -g ${REF}.genomeFile > $output.txt"
     exec "grep '^all' $output.txt | sort -k2,2nr | awk -v OFS='\t' -v CUMSUM=0 -v CUMFREQ=0.0 -v TOTALONTARGET=0 '{CUMSUM=CUMSUM+\$3; CUMFREQ=(100 * CUMSUM/\$4); TOTALONTARGET=TOTALONTARGET + (\$2*\$3); print \$0,CUMSUM,CUMFREQ,TOTALONTARGET;}' | sort -k2,2n > $output.nice"
     exec "bpipe_format_coverage.sh $output.nice $input1.fastq $input2.fastq 0 1 10 15 50 100 120 200 500 1000 1500 2000 2500 > $output.summary"
     forward input.bam
@@ -299,9 +299,9 @@ runPINDEL = {
 
 processBED = {
     output.dir="intermediate_files"
-    exec """${BEDTOOLS}/intersectBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.intersect.vcf"""
-    exec """${BEDTOOLS}/subtractBed -a $input2.vcf -b $input1.vcf > ${input2.prefix}.subtract.vcf"""
-    exec """${BEDTOOLS}/subtractBed -b $input2.vcf -a $input1.vcf > ${input1.prefix}.subtract.vcf"""
+    exec """$BEDTOOLS intersect -a $input2.vcf -b $input1.vcf > ${input2.prefix}.intersect.vcf"""
+    exec """$BEDTOOLS subtract -a $input2.vcf -b $input1.vcf > ${input2.prefix}.subtract.vcf"""
+    exec """$BEDTOOLS subtract -b $input2.vcf -a $input1.vcf > ${input1.prefix}.subtract.vcf"""
     forward(glob("intermediate_files/*ct.vcf"))
 }
 
