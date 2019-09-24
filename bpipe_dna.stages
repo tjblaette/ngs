@@ -5,7 +5,7 @@
 NGS="/NGS" //symlink to respective folder
 
 // PROGRAM DIRECTORIES
-ANNOVAR="/NGS/links/annovar"
+ANNOVAR="${NGS}/links/annovar"
 BEDTOOLS="bedtools"
 BWA="bwa"
 CUTADAPT="cutadapt"
@@ -13,7 +13,7 @@ FGBIO="fgbio"
 GATK="gatk"
 QC="ngsqc"
 PICARD="picard"
-PINDEL="/NGS/links/pindel"
+PINDEL="${NGS}/links/pindel"
 SAMTOOLS="samtools"
 VARSCAN="varscan"
 
