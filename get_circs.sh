@@ -132,16 +132,16 @@ awk -v OFS='\t' -v INDEX=0 '$4=="-" {for(i=$6-$10-2;i<$6+$9-1;i++){INDEX++; prin
 
 
 # annotate splice donors and acceptors with exon and gene information
-/NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_exonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_exonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_exonicAcceptor.bed
-/NGS/links/bedtools/intersectBed -wa -wb -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_exonicAcceptor.bed
+bedtools intersect -wa -wb -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_exonicDonor.bed
+bedtools intersect -wa -wb -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_exonicDonor.bed
+bedtools intersect -wa -wb -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_exonicAcceptor.bed
+bedtools intersect -wa -wb -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_exonicAcceptor.bed
 
 # extract splice donors and acceptors not overlapping any exon
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_nonExonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_nonExonicDonor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_nonExonicAcceptor.bed
-/NGS/links/bedtools/intersectBed -wa -v -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_nonExonicAcceptor.bed
+bedtools intersect -wa -v -a ${IN}_donor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed > ${IN}_nonExonicDonor.bed
+bedtools intersect -wa -v -a ${IN}_donor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed >> ${IN}_nonExonicDonor.bed
+bedtools intersect -wa -v -a ${IN}_acceptor+.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.START.uniq.bed > ${IN}_nonExonicAcceptor.bed
+bedtools intersect -wa -v -a ${IN}_acceptor-.bed -b /NGS/known_sites/hg19/gencode.v19.exons.toUCSC.END.uniq.bed >> ${IN}_nonExonicAcceptor.bed
 
 
 # sort annotated exonic results as required by join
@@ -252,7 +252,7 @@ fi
 # calculate coverage of alternative linear junctions
 # -> Alternative linear junctions are those in which either the backsplice junction donor or acceptor takes part.
 tail -n +2 "$CIRCS" | cut -f1-4,8 | uniq | awk -v OFS='\t' '{print $1,$2-15,$2+15,$4,$5,NR,"\n"$1,$3-15,$3+15,$4,$5,NR}' > $LIN_BED
-/NGS/links/bedtools/intersectBed -b "$BAM" -a <(/NGS/links/bedtools/sortBed -i "$LIN_BED" -faidx "$GENOME")  -c -bed -f 1.0 -sorted -g "$GENOME" | sort -k6n > $TMP
+bedtools intersect -b "$BAM" -a <(bedtools sort -i "$LIN_BED" -faidx "$GENOME")  -c -bed -f 1.0 -sorted -g "$GENOME" | sort -k6n > $TMP
 
 
 echo -e '#chr\tStart\tEnd\tgeneSymbol\tsupportingReads_circularJunction\tsupportingReads_linearJunction_start\tsupportingReads_linearJunction_end\tsupportingReads_linearJunction_min\tsupportingReads_linearJunction_max\tsupportingReads_linearJunction_mean\tsupportingReads_linearJunction_total\tsupportingReads_linearJunction_mean-div-by-supportingReads_circularJunction' > $LIN_COUNTS
