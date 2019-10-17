@@ -72,26 +72,26 @@ do
     join -t '	' $KEY $UNIFORM  | cut -f2,3 | sed 's/.*"\([^"]\+\)"/\1/' | sort | awk -v OFS='\t' 'NR==1 {PREV=$1; SUM=0} {ID=$1; if(ID==PREV){SUM=SUM+$2}else{print(PREV,SUM); SUM=$2;}; PREV=ID;} END {print(ID,SUM);}' > $ENSEMBL
 
     echo '__no_feature	0
-    __ambiguous	0
-    __too_low_aQual	0
-    __not_aligned	0
-    __alignment_not_unique	0' >> $UNIFORM
+__ambiguous	0
+__too_low_aQual	0
+__not_aligned	0
+__alignment_not_unique	0' >> $UNIFORM
 
     echo '__no_feature	0
-    __ambiguous	0
-    __too_low_aQual	0
-    __not_aligned	0
-    __alignment_not_unique	0' >> $ENSEMBL
+__ambiguous	0
+__too_low_aQual	0
+__not_aligned	0
+__alignment_not_unique	0' >> $ENSEMBL
 done
 
 # create DESeq2 dummy design table
 # -> one with counts per circRNA junction, one with counts per gene / ENSEMBL ID
 echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_linear-alternatives.tsv
-ls -C intermediate_files/*_linear-alternatives.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives.tsv
+ls -C $(find intermediate_files -type f -name "*_linear-alternatives.counts" -o -name ".*_linear-alternatives.counts")  | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives.tsv
 
 
 echo -e 'sampleName\tfileName\tcondition' > ${PREFIX}_linear-alternatives-per-gene.tsv
-ls -C intermediate_files/*_linear-alternatives-per-gene.counts | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives-per-gene.tsv
+ls -C $(find intermediate_files -type f -name "*_linear-alternatives-per-gene.counts" -o -name ".*_linear-alternatives-per-gene.counts")  | sed -e 's/.*\///' -e 's/\(.*\)/\1\t\1/' >> ${PREFIX}_linear-alternatives-per-gene.tsv
 
 
 rm "$LIST"
