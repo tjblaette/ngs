@@ -38,7 +38,7 @@ echo -e "Done!\n"
 
 # create sequence dictionary (.dict) for GATK
 echo "Preparing reference genome dictionary for GATK..."
-rm "$REFDICT"  # will fail if file exists already
+rm -f "$REFDICT"
 picard CreateSequenceDictionary R="$REF" O="$REFDICT"
 echo -e "Done!\n"
 
