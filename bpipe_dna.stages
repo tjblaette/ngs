@@ -2,7 +2,7 @@
 
 //// COMMON VARIABLE DEFINITIONS
 // BASE DIRECTORY WITH PROGRAMS
-NGS="/NGS" //symlink to respective folder
+NGS="~/work/NGS"
 
 // PROGRAM DIRECTORIES
 ANNOVAR="${NGS}/links/annovar"
