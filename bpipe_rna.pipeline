@@ -11,7 +11,7 @@ load 'bpipe_rna.config'
 
 Bpipe.run {
 	getVersions +
-	"%_R*.fastq" * [ qc ] +
+	"%_R*.fastq" * [ fastQC ] +
 	"%_R*.fastq" * [ alignSTAR + indexPIC + dedupOptPIC ] +
         "%.dedupOptPIC.bam" * [ idxstatPIC, countHTSeq_unstranded, countHTSeq_sameStranded, countHTSeq_otherStranded ] +
         cleanUp

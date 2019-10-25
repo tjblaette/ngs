@@ -9,6 +9,7 @@ ANNOVAR="${NGS}/links/annovar"
 BEDTOOLS="bedtools"
 BWA="bwa"
 CUTADAPT="cutadapt"
+FASTQC="fastqc"
 FGBIO="fgbio"
 GATK="gatk"
 QC="ngsqc"
@@ -28,6 +29,14 @@ qc = {
     exec "awk 'NR % 100 > 0 && NR % 100 < 5' $input2.fastq > $output2.subsample"
     exec "$QC -pe $output1.subsample $output2.subsample 2 A -c $nkern -onlyStat -o FASTQ_QC && touch $output.success"
 }
+
+fastQC = {
+    produce(input.prefix + "_fastqc.html", input.prefix + "_fastqc.zip") {
+        exec "$FASTQC $input.fastq"
+        forward input.fastq
+    }
+}
+
 
 trim = {
     //trim reads in fastq by triml bases on the left and trimr bases on the right (also adjust bqs!)

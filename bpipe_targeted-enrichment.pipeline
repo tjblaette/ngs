@@ -10,7 +10,7 @@ load 'bpipe_exome.config'
 
 Bpipe.run {
 	getVersions +
-	"%_R*.fastq" * [ qc ] +
+	"%.fastq" * [ fastQC ] +
 	"%_R*.fastq" * [
                             alignMEM +
                             processPICARD +

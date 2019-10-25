@@ -10,7 +10,7 @@ load 'bpipe_amplicon.config'
 
 Bpipe.run {
 	getVersions +
-	"%_R*.fastq" * [ qc ] +
+	"%_R*.fastq" * [ fastQC ] +
         "%_R*.fastq" *  [ cutadapt ] +
         "%.fastq" * [ trim ] +
         "%_R*.fastq" * [
