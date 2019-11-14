@@ -105,8 +105,13 @@ remove_interaction_terms <- function(design_terms) {
 }
 
 annotate_gene_symbol <- function(df, dict_file=gene_id_to_symbol_dict) {
-    # assuming that versioned ensembl IDs are in rownames of input df!
     dict <- read.table(dict_file, col.names=c("geneID", "geneSymbol"))
+    # in case ensembl IDs were versioned, remove version (= ID "decimal")
+    # -> there is no reason to enforce version match
+    # -> mismatch causes annotation to fail (happened for TCGA data, for example)
+    dict$geneID <- sapply(dict$geneID, function(x){ strsplit(as.character(x), '\\.') [[1]][1] })
+    rownames(df) <- sapply(rownames(df), function(x){ strsplit(as.character(x), '\\.') [[1]][1] })
+
     annotated <- merge(df, dict, by.x=0, by.y=1, all.x=TRUE)
 
     if (dim(annotated)[1] != dim(df)[1]) {
