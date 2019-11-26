@@ -49,6 +49,16 @@ cutadapt = {
     exec "$CUTADAPT --cores=$nkern -m 50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -o $output1.fastq -p $output2.fastq $input1.fastq $input2.fastq"
 }
 
+getReads = {
+    var umi_length: 8
+    exec """sed -e "2~4s/.\\{$umi_length\\}\\(.*\\)/\\1/" -e "4~4s/.\\{$umi_length\\}\\(.*\\)/\\1/" $input.fastq > $output.fastq"""
+}
+
+getUmis = {
+    var umi_length: 8
+    exec """sed -e "2~4s/\\(.\\{$umi_length\\}\\).*/\\1/" -e "4~4s/\\(.\\{$umi_length\\}\\).*/\\1/" $input.fastq > $output.fastq"""
+}
+
 
 alignMEM = {
     var nkern : 24
@@ -68,6 +78,22 @@ alignMEM = {
       forward(output.bam, inputs.fastq)
 }
 
+alignMEMse = {
+    var nkern : 24
+    output.dir="intermediate_files"
+    exec """$BWA mem
+	-M
+        -t $nkern
+	-R "@RG\\tID:$input1.prefix\\tSM:$input1.prefix\\tPL:illumina\\tCN:exome"
+        $REF
+        $input1.fastq | $PICARD SortSam
+                                    INPUT=/dev/stdin
+                                    OUTPUT=$output.bam
+                                    CREATE_INDEX=true
+                                    SORT_ORDER=coordinate"""
+      // forward input fastqs so that input2.fastq reaches dedupByBarcode stage for haloplexHS
+      forward(output.bam, inputs.fastq)
+}
 
 sortSAM = {
     output.dir="intermediate_files"
@@ -163,6 +189,11 @@ dedupUmiPIC = {
 umiToBam = {
     output.dir="intermediate_files"
     exec "$FGBIO AnnotateBamWithUmis --input $input.bam --fastq $input3.fastq --fail-fast --output $output.bam"
+}
+
+umiToBamSE = {
+    output.dir="intermediate_files"
+    exec "$FGBIO AnnotateBamWithUmis --input $input.bam --fastq $input2.fastq --fail-fast --output $output.bam"
 }
 
 

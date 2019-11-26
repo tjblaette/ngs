@@ -1,0 +1,29 @@
+//file containing Bpipe call for QIAGEN AMPLICON panel (single-end Illumina reads with 8 bp UMI at 5' end of each read)
+
+
+// LOAD STAGES
+load 'bpipe_dna.stages'
+
+// LOAD CONFIG
+load 'bpipe_amplicon.config'
+
+
+Bpipe.run {
+	getVersions +
+        "%_R*.fastq" * [
+                            [ getReads, getUmis ] +
+                            alignMEMse +
+                            umiToBamSE +
+                            dedupUmiPIC +
+                            idxstatPIC +
+                            realignGATK +
+                            [ coverBED, mpileupSAMexact ] +
+                            somVARSCunpaired
+        ] +
+        "%somVARSCunpaired.%" * [ processVARSC ] +
+        "%somVARSCunpaired.%.%" * [ fixFormat + tableANNOVAR ] +
+        "%somVARSCunpaired.*" * [ mergedAmplicon + filterOutput ] +
+        "%_R*.fastq" * [ cleanUp ]
+}
+
+

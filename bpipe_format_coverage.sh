@@ -29,7 +29,13 @@ FASTQ1=$2
 FASTQ2=$3
 
 TOTAL_BASES_FASTQ1=$(awk -v LINE=1 -v TOTAL_BASES=0 '{if (LINE == 0) {TOTAL_BASES=TOTAL_BASES+length($0); LINE=3;} else  {LINE=LINE-1}} END {print TOTAL_BASES}' $FASTQ1)
-TOTAL_BASES_FASTQ2=$(awk -v LINE=1 -v TOTAL_BASES=0 '{if (LINE == 0) {TOTAL_BASES=TOTAL_BASES+length($0); LINE=3;} else  {LINE=LINE-1}} END {print TOTAL_BASES}' $FASTQ2)
+TOTAL_BASES_FASTQ2=0
+
+if [ ! $(echo "$FASTQ2" | grep "getUmi") ]
+then
+    TOTAL_BASES_FASTQ2=$(awk -v LINE=1 -v TOTAL_BASES=0 '{if (LINE == 0) {TOTAL_BASES=TOTAL_BASES+length($0); LINE=3;} else  {LINE=LINE-1}} END {print TOTAL_BASES}' $FASTQ2)
+fi
+
 
 head -n 1 $IN | awk -v FASTQ1=$TOTAL_BASES_FASTQ1 -v FASTQ2=$TOTAL_BASES_FASTQ2 '{print "bp on target: "$8" of "FASTQ1+FASTQ2 " initial bp in fasta ("100* $8/(FASTQ1+FASTQ2)"%)"}'
 head -n 1 $IN | awk '{print "on average "$8/$4" reads per bp on the target"}'
