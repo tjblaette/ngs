@@ -10,7 +10,7 @@ Run it using default parameters as:
 setup_ngs_env.sh
 ```
 
-This will download and install miniconda, install all of the necessary packages that can be downloaded and installed without limiting license restrictions and informs on how to proceed next. Files that cannot be downloaded by the script will be informed about.
+This will download and install miniconda, install all of the necessary packages that can be downloaded and installed without limiting license restrictions and informs on how to proceed next. Files that cannot be downloaded by the script will be informed about; once the script successfully finishes all its tasks, the user is informed by a message printed to the screen.
 
 There are four optional parameters that can be passed to this script:
 
