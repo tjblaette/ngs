@@ -1,11 +1,26 @@
 #!/bin/bash
 
+# abort at first error
 set -e
 
+# set path for java
+# -> needed below for gradlew build of bpipe
+if [ ! "$(which java 2> /dev/null)" ]
+then
+    if [ -e '/fast/groups/ag_bullinger/work/setup_ngs/files-for-bih-server/tools/jdk1.8.0_25/bin/' ]
+    then
+        PATH="${PATH}:/fast/groups/ag_bullinger/work/setup_ngs/files-for-bih-server/tools/jdk1.8.0_25/bin/"
+    else
+        echo -e "\nERROR: Please add java to your path, it is required for building bpipe.\n"
+        exit
+    fi
+fi
+
+
 CONDA_DIR="${1:-"${HOME}/work/miniconda"}"
-CONDA_ENV="${2:-'ngs'}"
-SETUP_DIR="${3:-'.'}"
-SERVER="${4:-'BIH'}"
+CONDA_ENV="${2:-"ngs"}"
+SETUP_DIR="${3:-"$(pwd)"}"
+SERVER="${4:-"BIH"}"
 
 echo "$SETUP_DIR"
 
@@ -86,10 +101,9 @@ cd NGS/links
 ln -s ../tools/bwa_0.7.10/bwa bwa
 ln -s ../tools/varscan_v2.3.9/run_varscan_v2.3.9.sh varscan
 ln -s ../tools/bpipe_0.9.9.6/bin/bpipe bpipe
-ln -s ../tools/NGSQCToolkit_v2.3.3/QC/IlluQC_PRLL.pl ngsqc
 ln -s ../tools/fastqc_0.11.8/fastqc fastqc
 ln -s ../tools/GenomeAnalysisTK-3.4-46/run_jar.sh gatk
-ln -s $(which STAR) star # conda executable is 'STAR', bpipe expects 'star'
+ln -s ../annovar/annovar_20150322/ annovar
 # add links folder to PATH later, when adding miniconda
 
 
@@ -110,7 +124,7 @@ case "${HOSTNAME}" in
 	;;
     *)
 	export PATH=' >> ~/.bashrc
-echo -n "${SETUP_DIR}/NGS/links:${CONDA_DIR}/bin" >> ~/.bashrc
+echo -n "${SETUP_DIR}/NGS/ngs:${SETUP_DIR}/NGS/links:${CONDA_DIR}/bin" >> ~/.bashrc
 echo ':$PATH
 	;;
 esac' >> ~/.bashrc
@@ -138,22 +152,28 @@ source activate "${CONDA_ENV}"
 echo -e "Installing conda R packages, this might take a very long time..."
 conda install r-stringr r-ggthemes r-reshape2 r-ggplot2 r-pheatmap bioconductor-deseq2
 
+# link STAR now that it was installed by conda
+# -> conda executable is 'STAR', but bpipe expects 'star'
+cd "$SETUP_DIR"
+cd NGS/links
+ln -s $(which STAR) star
+cd "$SETUP_DIR"
 
 
 # prompt GATK obtainment
 echo -e "\nPlease obtain GATK 3.4.46 online or from files-for-bih-server"
-echo -e "Save it to NGS/tools and check the link in NGS/links\n"
+echo -e "Save it to NGS/tools, then copy 'run_jar.sh' from the ngs repository folder there as well as required by the gatk link in NGS/links\n"
 
 
 # prompt ANNOVAR obtainment
 echo -e "\nPlease obtain ANNOVAR from http://annovar.openbioinformatics.org"
-echo -e "Save it to NGS/tools and link it in NGS/links\n"
+echo -e "Save it to NGS/tools, then check and possibly fix the 'annovar' link in NGS/links - it should point to the parent folder of ANNOVAR's *.pl scripts\n"
 
 
 # get references and annotation files?
 echo -e "\nPlease obtain reference genome sequence and annotation files"
 echo -e "Save them to NGS/refgenome and NGS/known_sites respectively"
-echo -e "Create the necessary index files for each genome using 'make_genomeFiles.sh'\n"
+echo -e "Create the necessary index files for each genome using 'make_genomeFiles.sh' from the ngs repository\n"
 
 
 # report success!
