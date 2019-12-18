@@ -27,7 +27,7 @@
 REF="$1"
 
 REFFAI="${REF}.fai"
-REFDICT="${REF%.fasta}.dict"
+REFDICT="$(echo $REF | sed -e 's/fasta$//' -e 's/fa$//')dict"
 GENOME_FILE="${REF}.genomeFile"
 
 
