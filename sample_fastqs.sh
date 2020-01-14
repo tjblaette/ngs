@@ -35,7 +35,7 @@ OUT_PREFIX="$(echo "$IN" | sed 's/_R.*/_R/')"
 OUT_SUFFIX="${N_READS_TO_SAMPLE}_$(date +%d%H%M%S).fastq"
 
 
-if [ "$N_READS_TO_SAMPLE" -ge "$(wc -l "$IN" | cut -f1 -d' ')" ]
+if [ "$((4 * $N_READS_TO_SAMPLE))" -ge "$(wc -l "$IN" | cut -f1 -d' ')" ]
 then
     echo "The input FASTQ files contain fewer reads than you would like to sample!"
 else
