@@ -39,7 +39,7 @@ echo -e "Done!\n"
 # create sequence dictionary (.dict) for GATK
 echo "Preparing reference genome dictionary for GATK..."
 rm -f "$REFDICT"
-picard CreateSequenceDictionary R="$REF" O="$REFDICT"
+$picard CreateSequenceDictionary R="$REF" O="$REFDICT"
 echo -e "Done!\n"
 
 # create genome file for BEDTools
