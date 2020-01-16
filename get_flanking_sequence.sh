@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ####
 # T.J.Blätte
@@ -144,12 +144,12 @@ do
 		indel_end=$(echo $line | sed 's/"//g' | cut -f3 -d',' )
                 left=$(( $indel_begin - $LEN ))
                 right=$(( $indel_end +  1 ))
-		# if it's an insertion (Ref allele = '-'), WT base at variant pos coord must be printed too
-            	if [ $(echo "$line" | cut -f4 -d',') = '"-"' ]
+		# if it's an insertion (Ref allele == '-'), WT base at variant pos coord must be printed too
+            	if [ $(echo "$line" | cut -f4 -d',') == '"-"' ]
 		then
-			echo "${line},\"$(get_flanking $chrom $(($left + 1 )) $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN' >> $TMP
+			paste -d ',' <(echo ${line}) <(echo "\"$(get_flanking $chrom $(( $left + 1 )) $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN') >> $TMP
 		else
-                	echo "${line},\"$(get_flanking $chrom $left $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN' >> $TMP
+                	paste -d ',' <(echo ${line}) <(echo "\"$(get_flanking $chrom $left $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN') >> $TMP
 		fi
 done
 
