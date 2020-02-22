@@ -27,6 +27,8 @@
 #
 ####
 
+# exit when any error occurs
+set -e
 
 IN="$1"
 PAIRED="$2"
@@ -35,12 +37,12 @@ OUT_PREFIX="$(echo "$IN" | sed 's/_R.*/_R/')"
 OUT_SUFFIX="${N_READS_TO_SAMPLE}_$(date +%d%H%M%S).fastq"
 
 
-if [ "$N_READS_TO_SAMPLE" -ge "$(wc -l "$IN" | cut -f1 -d' ')" ]
+if [ $(( 4 * $N_READS_TO_SAMPLE )) -gt "$(wc -l "$IN" | cut -f1 -d' ')" ]
 then
     echo "The input FASTQ files contain fewer reads than you would like to sample!"
 else
     READS_TO_SAMPLE="$(sed -n '1~4p' "$IN" | cut -f1 -d' ' | sort -R | head -n $N_READS_TO_SAMPLE)"
-    grep -wF -A3 --no-group-separator "$READS_TO_SAMPLE" "$IN" > ${OUT_PREFIX}1_${OUT_SUFFIX}
-    grep -wF -A3 --no-group-separator "$READS_TO_SAMPLE" "$PAIRED" > ${OUT_PREFIX}2_${OUT_SUFFIX}
+    grep -wF -A3 --no-group-separator -f <(echo "$READS_TO_SAMPLE") "$IN" > ${OUT_PREFIX}1_${OUT_SUFFIX}
+    grep -wF -A3 --no-group-separator -f <(echo "$READS_TO_SAMPLE") "$PAIRED" > ${OUT_PREFIX}2_${OUT_SUFFIX}
     echo "Successfully sampled ${N_READS_TO_SAMPLE} random reads to ${OUT_PREFIX}?_${OUT_SUFFIX}"
 fi
