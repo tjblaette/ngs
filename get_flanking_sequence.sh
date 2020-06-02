@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ####
 # T.J.Blätte
@@ -46,7 +46,7 @@ get_flanking () {
 chr="$1"
 pos=$2
 ref=$3
-length=$(($4+1))
+length=$4
 input="$(basename ${5%.csv})"
 #length=$(( 2 * $4 + 1 ))
 
@@ -58,7 +58,7 @@ then
 fi
 
 #number of bases per line in reference fasta (50 for GATK's ucsc.hg19 but 60 for the other hg19!)
-width=$( head -2 $ref | wc -L )
+width=$( tail -2 $ref | wc -L )
 
 #parse non-number-chromosomes (and make sure all others are matched correctly too!)
 if [ ! -e ${ref}_chromosomes.txt ]
@@ -113,7 +113,7 @@ then
 #echo 'have a second line'
 	line2=$(( $line + 1 ))
 	start2=$(( 1 ))
-	end2=$(( ( $width - $end ) * (-1)))
+	end2=$(( $end - $width ))
 	end1=$width
 #kann ich hier garantieren, dass die nächste Zeile immer reicht??
 	echo $currentLine | sed "s/^\(.\{${start}\}\)\(.*\)/\2/g" > ${input}_${1}_${2}_sed_tmp.txt
@@ -134,16 +134,23 @@ fi
 
 }
 
-head -n 1 $IN | sed -e 's/?$/,left_flanking_seq,right_flanking_seq/' > $TMP
+echo "$(head -n1 "$IN"),\"leftFlankingSeq\",\"rightFlankingSeq\"" > $TMP
 
 tail -n +2 $IN | while read line
 do
                 chrom=$(echo $line | sed 's/"//g' | cut -f1 -d',')
-                indel_length=$(echo $line | sed 's/"//g' | cut -f5 -d',' | grep '-' | sed 's/^-\([ATCG]*\)/\1/' | wc -L)
+                # indel_length=$(echo $line | sed 's/"//g' | cut -f5 -d',' | grep '-' | sed 's/^-\([ATCG]*\)/\1/' | wc -L)
 		indel_begin=$(echo $line | sed 's/"//g' | cut -f2 -d',' )
+		indel_end=$(echo $line | sed 's/"//g' | cut -f3 -d',' )
                 left=$(( $indel_begin - $LEN ))
-                right=$(( $indel_begin +  $indel_length ))
-                echo "${line},\"$(get_flanking $chrom $left $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" >> $TMP
+                right=$(( $indel_end + 1 ))
+		# if it's an insertion (Ref allele == '-'), WT base at variant pos coord must be printed too
+            	if [ $(echo "$line" | cut -f4 -d',') == '"-"' ]
+            	then
+               		paste -d ',' <(echo ${line}) <(echo "\"$(get_flanking $chrom $(( $left + 1 )) $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN') >> $TMP
+            	else
+			paste -d ',' <(echo ${line}) <(echo "\"$(get_flanking $chrom $left $REF $LEN $IN)\",\"$(get_flanking $chrom $right $REF $LEN $IN)\"" | tr 'atcgn' 'ATCGN') >> $TMP
+		fi
 done
 
 # overwrite input file with tmp output
