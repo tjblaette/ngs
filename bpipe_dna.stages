@@ -33,7 +33,8 @@ trim = {
     //trim reads in fastq by triml bases on the left and trimr bases on the right (also adjust bqs!)
     var triml : 0
     var trimr : 0
-    exec """sed '2~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' $input | sed '4~4s/^.\\{${triml}\\}\\(.*\\).\\{${trimr}\\}\$/\\1/g' > $output.fastq"""
+    var nkern : 16
+    exec "$CUTADAPT --cores=$nkern -u ${triml} -u -${trimr} -o $output.fastq $input.fastq"
 }
 
 // haloplex trimming --> 1st bp of R2 fastq is always C for some reason ==> trim it
