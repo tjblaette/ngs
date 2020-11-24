@@ -29,7 +29,7 @@ qc = {
     exec "$QC -pe $output1.subsample $output2.subsample 2 A -c $nkern -onlyStat -o FASTQ_QC && touch $output.success"
 }
 
-trim = {
+trimFlanking = {
     //trim reads in fastq by triml bases on the left and trimr bases on the right (also adjust bqs!)
     var triml : 0
     var trimr : 0
@@ -45,7 +45,7 @@ trimC = {
     exec "cut -f1 -d ' ' $input3.fastq > $output3.fastq"
 }
 
-cutadapt = {
+trimAdapter = {
     var nkern : 24
     exec "$CUTADAPT --cores=$nkern -m 50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT -o $output1.fastq -p $output2.fastq $input1.fastq $input2.fastq"
 }
