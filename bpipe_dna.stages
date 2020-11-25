@@ -167,13 +167,17 @@ dedupOptPIC = {
 	OUTPUT=/dev/stdout
 	REMOVE_SEQUENCING_DUPLICATES=true
 	CREATE_INDEX=false
+	ADD_PG_TAG_TO_READS=false
+	CLEAR_DT=false
+	COMPRESSION_LEVEL=0
 	METRICS_FILE=${output.bam.prefix}_metrics.txt  |  $PICARD RevertSam
                                                                 INPUT=/dev/stdin
                                                                 OUTPUT=$output.bam
                                                                 CREATE_INDEX=true
                                                                 SORT_ORDER=coordinate
                                                                 REMOVE_DUPLICATE_INFORMATION=true
-                                                                REMOVE_ALIGNMENT_INFORMATION=false"""
+                                                                REMOVE_ALIGNMENT_INFORMATION=false
+								RESTORE_ORIGINAL_QUALITIES=false"""
 }
 
 dedupUmiPIC = {
